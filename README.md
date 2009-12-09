@@ -30,20 +30,26 @@ Components
  * `components_to_scripts` » converts a list of components to an ordered scripts list
 
 
-Builders
---------
+Generators
+----------
+
+### Builders
 
  * `build_scripts` » returns a string containing the source of the selected scripts and their dependancies
  * `build_components` » returns a string containing the source of the selected components and their dependancies
+
+### Writers
+
  * `write_scripts` » writes a file with the selected scripts and their dependancies
  * `write_components` » writes a file with the selected components and their dependancies
+
 
 Class usage
 -----------
 
 ### Syntax
 	
-	$pkg = new Packager("$path_to_manifest");
+	$pkg = new Packager(`$path_to_manifest`);
 	
 ### Example
 
