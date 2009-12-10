@@ -13,13 +13,11 @@ Class Packager {
 		
 		$this->package_path = dirname($manifest_path) . '/';
 		
-		$manifest = YAML::decode_file($manifest_path);
-		
-		$this->manifest = $manifest;
+		$this->manifest = YAML::decode_file($manifest_path);
 		
 		$this->scripts = array();
 
-		foreach ($manifest['sources'] as $i => $path){
+		foreach ($this->manifest['sources'] as $i => $path){
 			
 			$path = $this->package_path . $path;
 	
@@ -157,6 +155,12 @@ Class Packager {
 		}
 		
 		return $scripts;
+	}
+	
+	// # public MANIFEST getter
+	
+	public function get_key($key){
+		return $this->manifest[$key];
 	}
 	
 	// replaces the MooTools %build% dynamic var with the git commit hash
