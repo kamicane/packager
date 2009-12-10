@@ -6,21 +6,21 @@ require __DIR__ . '/packager.php';
 
 $executable = array_shift($argv);
 $manifest = array_shift($argv);
-$file_name = array_shift($argv);
+$output_name = array_shift($argv);
 
 $pkg = new Packager($manifest);
 
-echo "Packager is building $file_name with $manifest\n\n";
+echo "Packager is building $output_name with $manifest\n\n";
 echo "Included Components:\n";
 
-$scripts = (empty($argv)) ? $pkg->get_all_scripts() : $pkg->components_to_scripts($argv);
+$files = (empty($argv)) ? $pkg->get_all_files() : $pkg->components_to_files($argv);
 
-foreach ($scripts as $script){
-	echo "  -$script: [" . implode(", ", $pkg->get_script_provides($script)) . "]\n";
+foreach ($files as $file){
+	echo "  -$file: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n";
 }
 
 echo "\n";
 
-$pkg->write_components($file_name, $argv);
+$pkg->write_components($output_name, $argv);
 
 ?>

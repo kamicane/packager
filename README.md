@@ -1,26 +1,26 @@
 Packager API
 ============
 
-Scripts
--------
+Files
+-----
 
 ### Getters
 
- * `get_all_scripts` » get an ordered list of all scripts
- * `get_script_depends` » gets an ordered list of every script that this script depends on
- * `get_script_path` » gets the script file path
- * `get_script_source` » gets the script source
- * `get_script_description` » gets the script description
- * `get_script_provides` » gets a list of the script provided components
+ * `get_all_files` » get an ordered list of all files
+ * `get_file_depends` » gets an ordered list of every file that this file depends on
+ * `get_file_path` » gets the file path
+ * `get_file_source` » gets the file source
+ * `get_file_description` » gets the file description
+ * `get_file_provides` » gets a list of the file provided components
 
 ### Converters
 
- * `complete_scripts` » converts a list of scripts to an ordered list of scripts
+ * `complete_files` » converts a list of files to an ordered list of files
 
 ### Generators
 
- * `build_scripts` » returns a string containing the source of the selected scripts and their dependancies
- * `write_scripts` » writes a file with the selected scripts and their dependancies
+ * `build_files` » returns a string containing the source of the selected files and their dependancies
+ * `write_files` » writes a file with the selected files and their dependancies
 
 
 Components
@@ -28,11 +28,11 @@ Components
 
 ### Getters
 
- * `get_component_script` » gets the script name that contains this component
+ * `get_component_file` » gets the file name that contains this component
 
 ### Converters
 
- * `components_to_scripts` » converts a list of components to an ordered scripts list
+ * `components_to_files` » converts a list of components to an ordered files list
 
 ### Generators
 

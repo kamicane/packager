@@ -7,7 +7,7 @@ Class Packager {
 	
 	private $package_path;
 	private $manifest;
-	private $scripts;
+	private $files;
 	
 	public function __construct($manifest_path){
 		
@@ -15,16 +15,16 @@ Class Packager {
 		
 		$this->manifest = YAML::decode_file($manifest_path);
 		
-		$this->scripts = array();
+		$this->files = array();
 
 		foreach ($this->manifest['sources'] as $i => $path){
 			
 			$path = $this->package_path . $path;
 	
-			$script = file_get_contents($path);
+			$file = file_get_contents($path);
 	
 			// yaml header
-			preg_match("/\/\*\s*[-]{3}(.*)[.]{3}\s*\*\//s", $script, $matches); // this is a crappy regexp :)
+			preg_match("/\/\*\s*[-]{3}(.*)[.]{3}\s*\*\//s", $file, $matches); // this is a crappy regexp :)
 			$descriptor = YAML::decode($matches[1]);
 	
 			// populate / convert to array requires and provides
@@ -41,120 +41,120 @@ Class Packager {
 				$descriptor['provides'] = array();
 			}
 	
-			$this->scripts[$descriptor['name']] = array(
+			$this->files[$descriptor['name']] = array(
 				'description' => $descriptor['description'],
 				'requires' => $descriptor['requires'],
 				'provides' => $descriptor['provides'],
-				'source' => $script,
+				'source' => $file,
 				'path' => $path
 			);
 	
 		}
 	}
 	
-	public function build_scripts($scripts = null){
-		$included_scripts = (is_array($scripts) && count($scripts)) ? $this->complete_scripts($scripts) : $this->get_all_scripts();
+	public function build_files($files = null){
+		$included_files = (is_array($files) && count($files)) ? $this->complete_files($files) : $this->get_all_files();
 		
 		$included_sources = array();
-		foreach ($included_scripts as $script) $included_sources[] = $this->get_script_source($script);
+		foreach ($included_files as $file) $included_sources[] = $this->get_file_source($file);
 		
 		return $this->replace_build(implode($included_sources, "\n\n"));
 	}
 	
 	public function build_components($components = null){
-		return $this->build_scripts($this->raw_components_to_scripts($components));
+		return $this->build_files($this->raw_components_to_files($components));
 	}
 	
-	public function write_scripts($file_name, $scripts = null){
-		$full = $this->build_scripts($scripts);
+	public function write_files($file_name, $files = null){
+		$full = $this->build_files($files);
 		file_put_contents($file_name, $full);
 	}
 	
 	public function write_components($file_name, $components = null){
-		return $this->write_scripts($file_name, $this->raw_components_to_scripts($components));
+		return $this->write_files($file_name, $this->raw_components_to_files($components));
 	}
 	
 	// # public SCRIPTS
 	
-	public function get_all_scripts(){
-		$scripts = array();
-		foreach ($this->scripts as $script => $data) $scripts[] = $script;
-		return $this->complete_scripts($scripts);
+	public function get_all_files(){
+		$files = array();
+		foreach ($this->files as $file => $data) $files[] = $file;
+		return $this->complete_files($files);
 	}
 	
-	public function get_script_depends($script, &$buffer = array()){
-		$requires = $this->raw_components_to_scripts($this->scripts[$script]['requires']);
+	public function get_file_depends($file, &$buffer = array()){
+		$requires = $this->raw_components_to_files($this->files[$file]['requires']);
 		
-		foreach ($requires as $s) $this->get_script_depends($s, $buffer);
+		foreach ($requires as $s) $this->get_file_depends($s, $buffer);
 		
 		foreach ($requires as $s) array_include($buffer, $s);
 		
 		return $buffer;
 	}
 	
-	public function get_script_path($script){
-		return $this->scripts[$script]['path'];
+	public function get_file_path($file){
+		return $this->files[$file]['path'];
 	}
 	
-	public function get_script_source($script){
-		return $this->scripts[$script]['source'];
+	public function get_file_source($file){
+		return $this->files[$file]['source'];
 	}
 	
-	public function get_script_description($script){
-		return $this->scripts[$script]['description'];
+	public function get_file_description($file){
+		return $this->files[$file]['description'];
 	}
 	
-	public function get_script_provides($script){
-		return $this->scripts[$script]['provides'];
+	public function get_file_provides($file){
+		return $this->files[$file]['provides'];
 	}
 	
-	public function complete_scripts($scripts){
-		$ordered_scripts = array();
+	public function complete_files($files){
+		$ordered_files = array();
 		
-		foreach ($scripts as $script){
-			$requires = $this->get_script_depends($script);
+		foreach ($files as $file){
+			$requires = $this->get_file_depends($file);
 			
-			foreach ($requires as $s) array_include($ordered_scripts, $s);
+			foreach ($requires as $s) array_include($ordered_files, $s);
 			
-			array_include($ordered_scripts, $script);
+			array_include($ordered_files, $file);
 		}
 		
-		return $ordered_scripts;
+		return $ordered_files;
 	}
 	
 	// # public COMPONENTS
 	
-	public function get_component_script($component){
-		foreach ($this->scripts as $script => $data){
+	public function get_component_file($component){
+		foreach ($this->files as $file => $data){
 			$provides = $data['provides'];
 			
 			foreach ($provides as $c){
-				if ($c == $component) return $script;
+				if ($c == $component) return $file;
 			}
 		}
 		return null;
 	}
 	
-	public function components_to_scripts($components){
-		return $this->complete_scripts($this->raw_components_to_scripts($components));
+	public function components_to_files($components){
+		return $this->complete_files($this->raw_components_to_files($components));
 	}
 	
 	// # private COMPONENTS
 	
-	private function raw_components_to_scripts($components){
-		$scripts = array();
+	private function raw_components_to_files($components){
+		$files = array();
 		$included = array();
 
 		foreach ($components as $component){
 			
-			$script_name = $this->get_component_script($component);
-			if (!empty($included[$script_name])) continue;
-			$included[$script_name] = true;
+			$file_name = $this->get_component_file($component);
+			if (!empty($included[$file_name])) continue;
+			$included[$file_name] = true;
 			
-			$scripts[] = $script_name;
+			$files[] = $file_name;
 		}
 		
-		return $scripts;
+		return $files;
 	}
 	
 	// # public MANIFEST getter
@@ -165,17 +165,17 @@ Class Packager {
 	
 	// replaces the MooTools %build% dynamic var with the git commit hash
 	
-	private function replace_build($script){
+	private function replace_build($file){
 
 		$ref = file_get_contents($this->package_path . '.git/HEAD');
 		if ($ref){
 			preg_match("@ref: ([\w/]+)@", $ref, $matches);
 			$ref = file_get_contents($this->package_path . ".git/" . $matches[1]);
 			preg_match("@(\w+)@", $ref, $matches);
-			$script = str_replace("%build%", $matches[1], $script);
+			$file = str_replace("%build%", $matches[1], $file);
 		}
 		
-		return $script;
+		return $file;
 		
 	}
 	
