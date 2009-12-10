@@ -52,7 +52,7 @@ Class Packager {
 		}
 	}
 	
-	public function build_files($files = null){
+	public function build_from_files($files = null){
 		$included_files = (is_array($files) && count($files)) ? $this->complete_files($files) : $this->get_all_files();
 		
 		$included_sources = array();
@@ -61,17 +61,17 @@ Class Packager {
 		return $this->replace_build(implode($included_sources, "\n\n"));
 	}
 	
-	public function build_components($components = null){
-		return $this->build_files($this->raw_components_to_files($components));
+	public function build_from_components($components = null){
+		return $this->build_from_files($this->raw_components_to_files($components));
 	}
 	
-	public function write_files($file_name, $files = null){
-		$full = $this->build_files($files);
+	public function write_from_files($file_name, $files = null){
+		$full = $this->build_from_files($files);
 		file_put_contents($file_name, $full);
 	}
 	
-	public function write_components($file_name, $components = null){
-		return $this->write_files($file_name, $this->raw_components_to_files($components));
+	public function write_from_components($file_name, $components = null){
+		return $this->write_from_files($file_name, $this->raw_components_to_files($components));
 	}
 	
 	// # public SCRIPTS

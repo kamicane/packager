@@ -19,8 +19,8 @@ Files
 
 ### Generators
 
- * `build_files` » returns a string containing the source of the selected files and their dependancies
- * `write_files` » writes a file with the selected files and their dependancies
+ * `build_from_files` » returns a string containing the source of the selected files and their dependancies
+ * `write_from_files` » writes a file with the selected files and their dependancies
 
 
 Components
@@ -36,8 +36,8 @@ Components
 
 ### Generators
 
- * `build_components` » returns a string containing the source of the selected components and their dependancies
- * `write_components` » writes a file with the selected components and their dependancies
+ * `build_from_components` » returns a string containing the source of the selected components and their dependancies
+ * `write_from_components` » writes a file with the selected components and their dependancies
 
 
 Class usage
@@ -51,7 +51,7 @@ Class usage
 
 	$pkg = new Packager("~/Sites/mootools-core/package.yml");
 	
-	$pkg->write_components("~/Sites/mootools.js", array('Type', 'Array'));
+	$pkg->write_from_components("~/Sites/mootools.js", array('Type', 'Array'));
 
 Command Line usage
 ------------------

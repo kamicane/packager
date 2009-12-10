@@ -21,6 +21,6 @@ foreach ($files as $file){
 
 echo "\n";
 
-$pkg->write_components($output_name, $argv);
+$pkg->write_from_components($output_name, $argv);
 
 ?>
