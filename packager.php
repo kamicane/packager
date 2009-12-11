@@ -146,8 +146,8 @@ Class Packager {
 		$included = array();
 
 		foreach ($components as $component){
-			
 			$file_name = $this->get_component_file($component);
+			if ($file_name == null) continue;
 			if (!empty($included[$file_name])) continue;
 			$included[$file_name] = true;
 			
