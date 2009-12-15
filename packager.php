@@ -47,6 +47,11 @@ Class Packager {
 			
 			if (!array_key_exists('name', $descriptor)) $descriptor['name'] = basename($path, '.js');
 			
+			// Strip out beginning "/" to support `requires: [/Foo, /Bar]`
+			foreach ($descriptor['requires'] as $key => $require) {
+				$descriptor['requires'][$key] = preg_replace('/^\//', '', $require);
+			}
+			
 			$this->files[$descriptor['name']] = array(
 				'description' => $descriptor['description'],
 				'requires' => $descriptor['requires'],
