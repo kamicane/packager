@@ -25,7 +25,11 @@ Class Packager {
 	
 			// yaml header
 			preg_match("/\/\*\s*[-]{3}(.*)[.]{3}\s*\*\//s", $file, $matches); // this is a crappy regexp :)
-			$descriptor = YAML::decode($matches[1]);
+			
+			// hack to support unindented lists. hell might break loose. -- Taken from http://github.com/Guille/PluginsKit by Guillermo Rauch
+			$rawYAML = preg_replace('/$([\s]+)-/m', '$1 -', trim($matches[1]));
+			
+			$descriptor = YAML::decode($rawYAML);
 	
 			// populate / convert to array requires and provides
 	
