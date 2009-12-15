@@ -2,25 +2,28 @@
 
 <?php
 
+$stderr = fopen('php://stderr', 'w');
+
 require __DIR__ . '/packager.php';
 
 $executable = array_shift($argv);
 $manifest = array_shift($argv);
-$output_name = array_shift($argv);
 
 $pkg = new Packager($manifest);
 
-echo "Packager is building $output_name with $manifest\n\n";
-echo "Included Components:\n";
+fwrite($stderr, "Packager is building with $manifest\n\n");
+fwrite($stderr, "Included Components:\n");
 
 $files = (empty($argv)) ? $pkg->get_all_files() : $pkg->components_to_files($argv);
 
 foreach ($files as $file){
-	echo "  -$file: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n";
+	fwrite($stderr, "- $file: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
 }
 
-echo "\n";
+fwrite($stderr, "\n");
 
-$pkg->write_from_components($output_name, $argv);
+echo $pkg->build_from_components($argv);
+
+fclose($stderr);
 
 ?>
