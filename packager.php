@@ -40,7 +40,9 @@ Class Packager {
 			} else {
 				$descriptor['provides'] = array();
 			}
-	
+			
+			if (!array_key_exists('name', $descriptor)) $descriptor['name'] = basename($path, '.js');
+			
 			$this->files[$descriptor['name']] = array(
 				'description' => $descriptor['description'],
 				'requires' => $descriptor['requires'],
