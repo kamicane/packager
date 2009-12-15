@@ -58,10 +58,13 @@ Command Line usage
 
 ### Syntax
 
-	./build `$manifest_path` `$output_path` `$component` `$component` `$component` `$component` …
+	./build MANIFEST_PATH [COMPONENTS]
+
+* `MANIFEST_PATH` is a filepath to the manifest file for a package *(required)*
+* `COMPONENTS` can be one or more components provided by the package *(optional)*
 
 ### Example
 
-	./build ~/Sites/mootools-core/package.yml ~/Sites/mootools.js Fx Element Array //partial build
+	./build ~/Sites/mootools-core/package.yml Fx Element Array > ~/Sites/mootools.js  # partial build
 	
-	./build ~/Sites/mootools-core/package.yml ~/Sites/mootools.js //full build
+	./build ~/Sites/mootools-core/package.yml > ~/Sites/mootools.js  # full build
