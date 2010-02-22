@@ -28,7 +28,7 @@ Components
 
 ### Getters
 
- * `get_component_file` » gets the file name that contains this component
+ * `get_component_files` » gets the names of the files that provide this component
 
 ### Converters
 

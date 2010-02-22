@@ -135,15 +135,18 @@ Class Packager {
 	
 	// # public COMPONENTS
 	
-	public function get_component_file($component){
+	public function get_component_files($component){
+		$result = array();
+		
 		foreach ($this->files as $file => $data){
 			$provides = $data['provides'];
 			
 			foreach ($provides as $c){
-				if ($c == $component) return $file;
+				if ($c == $component) $result[] = $file;
 			}
 		}
-		return null;
+		
+		return $result;
 	}
 	
 	public function components_to_files($components){
@@ -157,12 +160,12 @@ Class Packager {
 		$included = array();
 
 		foreach ($components as $component){
-			$file_name = $this->get_component_file($component);
-			if ($file_name == null) continue;
-			if (!empty($included[$file_name])) continue;
-			$included[$file_name] = true;
-			
-			$files[] = $file_name;
+			$file_names = $this->get_component_files($component);
+			foreach ($file_names as $file_name){
+				if (!empty($included[$file_name])) continue;
+				$included[$file_name] = true;
+				$files[] = $file_name;
+			}
 		}
 		
 		return $files;
