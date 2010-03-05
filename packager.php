@@ -8,12 +8,13 @@ Class Packager {
 	private $package_path;
 	private $manifest;
 	private $files;
+	private $packages;
 	
-	public function __construct($manifest_path){
+	public function __construct($package_path){
+
+		$this->package_path = preg_replace('/\/$/', '', $package_path) . '/';
 		
-		$this->package_path = dirname($manifest_path) . '/';
-		
-		$this->manifest = YAML::decode_file($manifest_path);
+		$this->manifest = YAML::decode_file($this->package_path . 'package.yml');
 		
 		$this->files = array();
 
@@ -32,35 +33,32 @@ Class Packager {
 			$descriptor = YAML::decode($rawYAML);
 	
 			// populate / convert to array requires and provides
-	
-			if (!empty($descriptor['requires'])){
-				if (!is_array($descriptor['requires'])) $descriptor['requires'] = array($descriptor['requires']);
-			} else {
-				$descriptor['requires'] = array();
-			}
-	
-			if (!empty($descriptor['provides'])){
-				if (!is_array($descriptor['provides'])) $descriptor['provides'] = array($descriptor['provides']);
-			} else {
-				$descriptor['provides'] = array();
-			}
 			
-			if (!array_key_exists('name', $descriptor)) $descriptor['name'] = basename($path, '.js');
+			$requires = !empty($descriptor['requires']) ? $descriptor['requires'] : array();
+			$provides = !empty($descriptor['provides']) ? $descriptor['provides'] : array();
+			$name = !empty($descriptor['name']) ? $descriptor['name'] : basename($path, '.js');
+
+			if (!is_array($requires)) $requires = array($requires);
+			if (!is_array($provides)) $provides = array($provides);
 			
 			// Strip out beginning "/" to support `requires: [/Foo, /Bar]`
-			foreach ($descriptor['requires'] as $key => $require) {
-				$descriptor['requires'][$key] = preg_replace('/^\//', '', $require);
+			foreach ($requires as $i => $require){
+				$requires[$i] = preg_replace('/^\//', '', $require);
 			}
 			
-			$this->files[$descriptor['name']] = array(
+			$this->files[$name] = array(
 				'description' => $descriptor['description'],
-				'requires' => $descriptor['requires'],
-				'provides' => $descriptor['provides'],
+				'requires' => $requires,
+				'provides' => $provides,
 				'source' => $file,
 				'path' => $path
 			);
 	
 		}
+	}
+	
+	private function parse_manifest(){
+		//...
 	}
 	
 	public function build_from_files($files = null){
