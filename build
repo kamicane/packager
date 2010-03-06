@@ -10,7 +10,7 @@ $executable = array_shift($argv);
 $package = array_shift($argv);
 
 $pkg = new Packager($package);
-$package_name = $pkg->get_manifest_key('name');
+$package_name = $pkg->get_package_name();
 
 fwrite($stderr, "Packager is building $package_name\n\n");
 fwrite($stderr, "Included Components:\n");

@@ -202,7 +202,7 @@ Class Packager {
 	public function __call($method, $arguments){
 		if (substr($method, 0, 9) == 'get_file_'){
 			
-			$file = $arguments[0];
+			$file = array_get($arguments, 0);
 			if (empty($file)) return null;
 			$key = substr($method, 9);
 			$hash = $this->file_to_hash($file);
@@ -211,7 +211,7 @@ Class Packager {
 		} else if (substr($method, 0, 12) == 'get_package_'){
 			
 			$key = substr($method, 12);
-			$package = $arguments[0];
+			$package = array_get($arguments, 0);
 			$package = array_get($this->manifests, (empty($package)) ? $this->root : $package);
 			return array_get($package, $key);
 
