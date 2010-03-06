@@ -20,4 +20,12 @@ function array_erase(&$array, $item){
 	return $array;
 }
 
+function array_has($array, $key){
+	return !empty($array) && array_key_exists($key, $array);
+}
+
+function array_get($array, $key){
+	return (!empty($array) && array_key_exists($key, $array)) ? $array[$key] : null;
+}
+
 ?>

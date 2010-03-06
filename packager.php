@@ -18,20 +18,16 @@ Class Packager {
 		$package_path = preg_replace('/\/$/', '', $package_path) . '/';
 		$manifest = YAML::decode_file($package_path . 'package.yml');
 
-		$manifest_name = $manifest['name'];
+		$package_name = $manifest['name'];
 		
-		if ($is_root) $this->root = $manifest_name;
-		
-		if (!empty($this->manifests[$manifest_name])) return;
-		
-		$manifest_author = !empty($manifest['author']) ? $manifest['author'] : null;
-		$manifest_authors = !empty($manifest['authors']) ? $manifest['authors'] : null;
-		$manifest_authors = $this->get_authors($manifest_authors, $manifest_author);
-		
-		$this->manifests[$manifest_name] = $manifest;
-		$this->manifests[$manifest_name]['authors'] = $manifest_authors;
-		$this->manifests[$manifest_name]['path'] = $package_path;
+		if ($is_root) $this->root = $package_name;
 
+		if (array_has($this->manifests, $package_name)) return;
+
+		$manifest['path'] = $package_path;
+		
+		$this->manifests[$package_name] = $manifest;
+		
 		foreach ($manifest['sources'] as $i => $path){
 			
 			$path = $package_path . $path;
@@ -52,38 +48,28 @@ Class Packager {
 			if (!is_array($requires)) $requires = array($requires);
 			if (!is_array($provides)) $provides = array($provides);
 			
-			$descriptor_author = !empty($descriptor['author']) ? $descriptor['author'] : null;
-			$descriptor_authors = !empty($descriptor['authors']) ? $descriptor['authors'] : null;
-			
-			//"normalization". Fills up the default package name from requires, if not present.
+			// "normalization" for requires. Fills up the default package name from requires, if not present.
 			foreach ($requires as $i => $require){
-				$require = $this->parse_name($manifest_name, $require);
+				$require = $this->parse_name($package_name, $require);
 				$requires[$i] = implode('/', $require);
 			}
 			
-			$this->packages[$manifest_name][$file_name] = array(
-				'name' => $file_name,
-				'full_name' => $manifest_name . '/' . $file_name,
-				'package' => $manifest_name,
-				'description' => $descriptor['description'],
-				'authors' => $this->get_authors($descriptor_authors, $descriptor_author, $manifest_authors),
-				'license' => empty($descriptor['license']) ? $manifest_license : $descriptor['license'],
-				'requires' => $requires,
-				'provides' => $provides,
-				'source' => $source,
-				'path' => $path
-			);
+			$descriptor['package'] = $package_name;
+			$descriptor['requires'] = $requires;
+			$descriptor['provides'] = $provides;
+			$descriptor['source'] = $source;
+			$descriptor['path'] = $path;
+			$descriptor['package/name'] = $package_name . '/' . $file_name;
+			
+			$license = array_get($descriptor, 'license');
+			$descriptor['license'] = empty($license) ? array_get($manifest, 'license') : $license;
+			
+			$this->packages[$package_name][$file_name] = $descriptor;
 
 		}
 	}
 	
 	// # private UTILITIES
-	
-	private function get_authors($authors = null, $author = null, $default = null){
-		$use = empty($authors) ? $author : $authors;
-		if (empty($use) && !empty($default)) return $default;
-		return is_array($use) ? $use : empty($use) ? array() : array($use);
-	}
 	
 	private function parse_name($default, $name){
 		$exploded = explode('/', $name);
@@ -108,8 +94,8 @@ Class Packager {
 	
 	private function component_to_hash($name){
 		$pair = $this->parse_name($this->root, $name);
-		if (!empty($this->packages[$pair[0]])) $package = $this->packages[$pair[0]];
-		else return null;
+		$package = array_get($this->packages, $pair[0]);
+		if (empty($package)) return null;
 		
 		$component = $pair[1];
 		
@@ -124,8 +110,8 @@ Class Packager {
 	
 	private function file_to_hash($name){
 		$pair = $this->parse_name($this->root, $name);
-		if (!empty($this->packages[$pair[0]])) $package = $this->packages[$pair[0]];
-		else return null;
+		$package = array_get($this->packages, $pair[0]);
+		if (empty($package)) return null;
 		
 		$file_name = $pair[1];
 		
@@ -165,7 +151,7 @@ Class Packager {
 	public function get_all_files(){
 		$files = array();
 		foreach ($this->packages as $package){
-			foreach ($package as $file) $files[] = $file['full_name'];
+			foreach ($package as $file) $files[] = $file['package/name'];
 		}
 		return $this->complete_files($files);
 	}
@@ -180,7 +166,7 @@ Class Packager {
 		$files = $this->get_file_dependancies($file);
 		$hash = $this->file_to_hash($file);
 		if (empty($hash)) return array();
-		array_include($files, $hash['full_name']);
+		array_include($files, $hash['package/name']);
 		return $files;
 	}
 	
@@ -193,43 +179,10 @@ Class Packager {
 		return $ordered_files;
 	}
 	
-	// # piblic FILE properties
-	
-	public function get_file_name($file){
-		$hash = $this->file_to_hash($file);
-		return (empty($hash)) ? null : $hash['name'];
-	}
-	
-	public function get_file_path($file){
-		$hash = $this->file_to_hash($file);
-		return (empty($hash)) ? null : $hash['path'];
-	}
-
-	public function get_file_source($file){
-		$hash = $this->file_to_hash($file);
-		return (empty($hash)) ? null : $hash['source'];
-	}
-
-	public function get_file_description($file){
-		$hash = $this->file_to_hash($file);
-		return (empty($hash)) ? null : $hash['description'];
-	}
-	
-	public function get_file_authors($file){
-		$hash = $this->file_to_hash($file);
-		return (empty($hash)) ? null : $hash['authors'];
-	}
-
-	public function get_file_provides($file){
-		$hash = $this->file_to_hash($file);
-		return (empty($hash)) ? null : $hash['provides'];
-	}
-	
 	// # public COMPONENTS
 	
 	public function component_to_file($component){
-		$hash = $this->component_to_hash($component);
-		return (!empty($hash)) ? $hash['full_name'] : null;
+		return array_get($this->component_to_hash($component), 'package/name');
 	}
 	
 	public function components_to_files($components){
@@ -244,16 +197,48 @@ Class Packager {
 		return $this->complete_files($files);
 	}
 	
-	// # public PACKAGES
+	// # dynamic getter for PACKAGE properties and FILE properties
 	
-	public function get_manifest_key($key){
-		$parts = $this->parse_name($this->root, $key);
-		$package = $parts[0];
-		$key = $parts[1];
-		if (empty($this->manifests[$package])) return null;
-		$package = $this->manifests[$package];
-		if (empty($package[$key])) return null;
-		return $package[$key];
+	public function __call($method, $arguments){
+		if (substr($method, 0, 9) == 'get_file_'){
+			
+			$file = $arguments[0];
+			if (empty($file)) return null;
+			$key = substr($method, 9);
+			$hash = $this->file_to_hash($file);
+			return array_get($hash, $key);
+			
+		} else if (substr($method, 0, 12) == 'get_package_'){
+			
+			$key = substr($method, 12);
+			$package = $arguments[0];
+			$package = array_get($this->manifests, (empty($package)) ? $this->root : $package);
+			return array_get($package, $key);
+
+		}
+		
+		return null;
+	}
+	
+	// authors normalization
+	
+	public function get_package_authors($package = null){
+		if (empty($package)) $package = $this->root;
+		$package = array_get($this->manifests, $package);
+		if (!$package) return array();
+		return $this->normalize_authors(array_get($package, 'authors'), array_get($package, 'author'));
+	}
+	
+	public function get_file_authors($file){
+		$hash = $this->file_to_hash($file);
+		if (empty($hash)) return array();
+		return $this->normalize_authors(array_get($hash, 'authors'), array_get($hash, 'author'), $this->get_package_authors());
+	}
+	
+	private function normalize_authors($authors = null, $author = null, $default = null){
+		$use = empty($authors) ? $author : $authors;
+		if (empty($use) && !empty($default)) return $default;
+		return is_array($use) ? $use : empty($use) ? array() : array($use);
 	}
 	
 }
