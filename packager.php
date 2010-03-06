@@ -225,7 +225,7 @@ Class Packager {
 	public function get_package_authors($package = null){
 		if (empty($package)) $package = $this->root;
 		$package = array_get($this->manifests, $package);
-		if (!$package) return array();
+		if (empty($package)) return array();
 		return $this->normalize_authors(array_get($package, 'authors'), array_get($package, 'author'));
 	}
 	
@@ -238,7 +238,9 @@ Class Packager {
 	private function normalize_authors($authors = null, $author = null, $default = null){
 		$use = empty($authors) ? $author : $authors;
 		if (empty($use) && !empty($default)) return $default;
-		return is_array($use) ? $use : empty($use) ? array() : array($use);
+		if (is_array($use)) return $use;
+		if (empty($use)) return array();
+		return array($use);
 	}
 	
 }
