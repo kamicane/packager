@@ -26,20 +26,13 @@ Class Packager {
 		
 		$manifest_author = !empty($manifest['author']) ? $manifest['author'] : null;
 		$manifest_authors = !empty($manifest['authors']) ? $manifest['authors'] : null;
-		$manifest_description = !empty($manifest['description']) ? $manifest['description'] : null;
-
 		$manifest_authors = $this->get_authors($manifest_authors, $manifest_author);
-		$manifest_sources = $manifest['sources'];
-		$manifest_license = $manifest['license'];
 		
-		$this->manifests[$manifest_name] = array(
-			'authors' => $manifest_authors,
-			'license' => $manifest_license,
-			'description' => $manifest_description,
-			'path' => $package_path
-		);
+		$this->manifests[$manifest_name] = $manifest;
+		$this->manifests[$manifest_name]['authors'] = $manifest_authors;
+		$this->manifests[$manifest_name]['path'] = $package_path;
 
-		foreach ($manifest_sources as $i => $path){
+		foreach ($manifest['sources'] as $i => $path){
 			
 			$path = $package_path . $path;
 			
@@ -253,29 +246,14 @@ Class Packager {
 	
 	// # public PACKAGES
 	
-	public function get_package_name($package = null){
-		if (empty($package)) $package = $this->root;
-		return (!empty($this->manifests[$package])) ? $package : null;
-	}
-	
-	public function get_package_authors($package = null){
-		if (empty($package)) $package = $this->root;
-		return $this->manifests[$package]['authors'];
-	}
-	
-	public function get_package_path($package = null){
-		if (empty($package)) $package = $this->root;
-		return $this->manifests[$package]['path'];
-	}
-	
-	public function get_package_license($package = null){
-		if (empty($package)) $package = $this->root;
-		return $this->manifests[$package]['license'];
-	}
-	
-	public function get_package_description($package = null){
-		if (empty($package)) $package = $this->root;
-		return $this->manifests[$package]['description'];
+	public function get_manifest_key($key){
+		$parts = $this->parse_name($this->root, $key);
+		$package = $parts[0];
+		$key = $parts[1];
+		if (empty($this->manifests[$package])) return null;
+		$package = $this->manifests[$package];
+		if (empty($package[$key])) return null;
+		return $package[$key];
 	}
 	
 }
