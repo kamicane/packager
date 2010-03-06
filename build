@@ -7,17 +7,19 @@ $stderr = fopen('php://stderr', 'w');
 require __DIR__ . '/packager.php';
 
 $executable = array_shift($argv);
-$manifest = array_shift($argv);
+$package = array_shift($argv);
 
-$pkg = new Packager($manifest);
+$pkg = new Packager($package);
+$package_name = $pkg->get_package_name();
 
-fwrite($stderr, "Packager is building with $manifest\n\n");
+fwrite($stderr, "Packager is building $package_name\n\n");
 fwrite($stderr, "Included Components:\n");
 
 $files = (empty($argv)) ? $pkg->get_all_files() : $pkg->components_to_files($argv);
 
 foreach ($files as $file){
-	fwrite($stderr, "- $file: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+	$name = $pkg->get_file_name($file);
+	fwrite($stderr, "- $name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
 }
 
 fwrite($stderr, "\n");
