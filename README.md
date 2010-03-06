@@ -1,13 +1,34 @@
+Packager
+========
+
+Packager is a PHP 5.3 library to concatenate libraries split in multiple files in a single file. It automatically calculates dependancies. Packager requires a yml header syntax in every file, and a `package.yml` manifest file, as seen on the MooTools project.
+
 Packager API
 ============
 
-Files
------
+Constructor
+-----------
+
+The constructor of this class accepts either a path to a package or a list of path to packages. `package.yml` must not be included in the path.
+
+### Example
+	
+	$pkg = new Packager("/Users/kamicane/Sites/mootools-core/");
+	$pkg = new Packager(array("/Users/kamicane/Sites/mootools-core/", "/Users/kamicane/Sites/mootools-more/"));
+
+Adding a manifest
+-----------------
+
+* `parse_manifest` » adds a manifest to this instance
+
+
+Working with files
+------------------
 
 ### Getters
 
- * `get_all_files` » get an ordered list of all files
- * `get_file_depends` » gets an ordered list of every file that this file depends on
+ * `get_all_files` » gets an ordered list of all files
+ * `get_file_dependancies` » gets an ordered list of every file that this file depends on
  * `get_file_path` » gets the file path
  * `get_file_source` » gets the file source
  * `get_file_description` » gets the file description
@@ -15,6 +36,7 @@ Files
 
 ### Converters
 
+ * `complete_file` » converts a single file to an ordered list of files
  * `complete_files` » converts a list of files to an ordered list of files
 
 ### Generators
@@ -23,16 +45,13 @@ Files
  * `write_from_files` » writes a file with the selected files and their dependancies
 
 
-Components
-----------
+Working with components
+-----------------------
 
-### Getters
+### Converting to files
 
- * `get_component_files` » gets the names of the files that provide this component
-
-### Converters
-
- * `components_to_files` » converts a list of components to an ordered files list
+ * `component_to_file` » gets the name of the file that provides this component
+ * `components_to_files` » converts a list of components to an ordered list of files
 
 ### Generators
 
@@ -49,9 +68,9 @@ Class usage
 
 ### Example
 
-	$pkg = new Packager("~/Sites/mootools-core/package.yml");
+	$pkg = new Packager("/Users/kamicane/Sites/mootools-core/");
 	
-	$pkg->write_from_components("~/Sites/mootools.js", array('Type', 'Array'));
+	$pkg->write_from_components("/Users/kamicane/Sites/mootools.js", array('Type', 'Array'));
 
 Command Line usage
 ------------------
@@ -65,6 +84,6 @@ Command Line usage
 
 ### Example
 
-	./build ~/Sites/mootools-core/package.yml Fx Element Array > ~/Sites/mootools.js  # partial build
+	./build /Users/kamicane/Sites/mootools-core/ Fx Element Array > /Users/kamicane/Sites/mootools.js  # partial build
 	
-	./build ~/Sites/mootools-core/package.yml > ~/Sites/mootools.js  # full build
+	./build /Users/kamicane/Sites/mootools-core/ > /Users/kamicane/Sites/mootools.js  # full build
