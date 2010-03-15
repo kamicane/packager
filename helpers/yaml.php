@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . "/../libs/spyc.php";
+require dirname(__FILE__) . "/../libs/spyc.php";
 
 class YAML {
 	
