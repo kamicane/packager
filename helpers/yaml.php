@@ -5,13 +5,17 @@ require __DIR__ . "/../libs/spyc.php";
 class YAML {
 	
 	public static function decode($input){
-		return spyc_load($input);
+		return Spyc::YAMLLoadString($input);
 	}
 	
-	public static function decode_file($input){
-		return (file_exists($input)) ? self::decode(file_get_contents($input)) : null;
+	public static function decode_file($file){
+		return (file_exists($file)) ? self::decode(file_get_contents($file)) : null;
 	}
 	
+	public static function encode($input){
+		return Spyc::YAMLDump($input);
+	}
+
 }
 
 ?>
