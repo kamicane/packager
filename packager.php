@@ -34,12 +34,19 @@ Class Packager {
 			
 			// this is where we "hook" for possible other replacers.
 			$source = $this->replace_build($package_path, file_get_contents($path));
-	
-			// yaml header
-			preg_match("/\/\*\s*[-]{3}(.*)[.]{3}\s*\*\//s", $source, $matches); // this is a crappy regexp :)
-			
-			$descriptor = YAML::decode($matches[1]);
-	
+
+			$descriptor = array();
+
+			// get contents of first comment
+			preg_match('/^\s*\/\*\s*(.*?)\s*\*\//s', $source, $matches);
+
+			if (!empty($matches)){
+				// get contents of YAML front matter
+				preg_match('/^-{3}\s*$(.*?)^(?:-{3}|\.{3})\s*$/ms', $matches[1], $matches);
+
+				if (!empty($matches)) $descriptor = YAML::decode($matches[1]);
+			}
+
 			// populate / convert to array requires and provides
 			$requires = !empty($descriptor['requires']) ? $descriptor['requires'] : array();
 			$provides = !empty($descriptor['provides']) ? $descriptor['provides'] : array();
