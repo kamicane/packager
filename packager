@@ -1,0 +1,119 @@
+#!/usr/bin/env php
+
+<?php
+
+require __DIR__ . '/packager.php';
+
+$executable = array_shift($argv);
+$command = array_shift($argv);
+
+function out($message){
+	$std_err = fopen('php://stderr', 'w');
+	fwrite($std_err, "$message\n");
+	fclose($std_err);
+}
+
+$user = exec("whoami");
+
+$packages = YAML::decode_file("/Users/$user/.packages.yml");
+if (empty($packages)) $packages = array();
+
+switch ($command){
+	
+	case 'register':
+
+		$folder = array_shift($argv);
+		$pkg = new Packager($folder);
+		$name = $pkg->get_package_name();
+		$path = $pkg->get_package_path();
+		
+		$packages[$name] = $path;
+		
+		file_put_contents("/Users/$user/.packages.yml", YAML::encode($packages));
+		
+		out("the package $name has been registered as $path\n");
+
+	break;
+	
+	case 'unregister':
+	
+		$name = array_shift($argv);
+		
+		if (empty($packages[$name])){
+			out("there is no package called $name\n");
+			break;
+		}
+
+		unset($packages[$name]);
+	
+		file_put_contents('/Users/kamicane/.packages.yml', YAML::encode($packages));
+	
+		out("the package $name has been unregistered\n");
+	
+	break;
+	
+	case 'list':
+	
+		foreach ($packages as $name => $path) out("$name: $path");
+		out("");
+		
+	break;
+	
+	case 'build':
+
+		$selected = array('components' => array(), 'files' => array(), 'packages' => null);
+		
+		$build = 'components';
+		
+		foreach ($argv as $arg){
+			if ($arg == '+packages'){
+				$build = 'packages';
+				if ($selected['packages'] == null) $selected['packages'] = array();
+				continue;
+			} else if ($arg == '+components'){
+				$build = 'components';
+				continue;
+			} else if ($arg == '+files'){
+				$build = 'files';
+				continue;
+			}
+
+			$selected[$build][] = $arg;
+		}
+		
+		$paths = array();
+		$included_packages = array();
+			
+		foreach ($packages as $name => $path){
+			if ($selected['packages'] == null || array_contains($selected['packages'], $name)){
+				$paths[] = $path;
+				$included_packages[] = $name;
+			}
+		}
+		
+		$pkg = new Packager($paths);
+
+		$build_all = array_has($selected['components'], '*') || array_has($selected['files'], '*');
+		
+		$files = $build_all ? $pkg->get_all_files() : array_merge($pkg->components_to_files($selected['components']), $selected['files']);
+		
+		out("Build using: " . implode(', ', $included_packages));
+		
+		out("Included Files/Components:");
+		
+		foreach ($files as $file){
+			$name = $pkg->get_file_name($file);
+			out("- $name: [" . implode(", ", $pkg->get_file_provides($file)) . "]");
+		}
+		
+		out('');
+		
+		echo $pkg->build_from_files($files);
+		
+		out('');
+	
+	break;
+	
+}
+
+?>
