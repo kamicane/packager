@@ -17,6 +17,8 @@ Class Packager {
 	private function parse_manifest($package_path, $is_root = false){
 		$package_path = preg_replace('/\/$/', '', $package_path) . '/';
 		$manifest = YAML::decode_file($package_path . 'package.yml');
+		
+		if (empty($manifest)) throw new Exception("package.yml not found in $package_path, or unable to parse manifest.");
 
 		$package_name = $manifest['name'];
 		
@@ -132,7 +134,8 @@ Class Packager {
 	// # public BUILD
 	
 	public function build_from_files($files = null){
-		$included_files = (is_array($files) && count($files)) ? $this->complete_files($files) : $this->get_all_files();
+		if (empty($files)) return null;
+		$included_files = ($files == '*') ? $this->get_all_files() : $this->complete_files($files);
 		
 		$included_sources = array();
 		foreach ($included_files as $file) $included_sources[] = $this->get_file_source($file);
