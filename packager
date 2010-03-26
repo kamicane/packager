@@ -61,19 +61,22 @@ switch ($command){
 	
 	case 'build':
 
-		$selected = array('components' => array(), 'files' => array(), 'packages' => null);
+		$selected = array('components' => array(), 'files' => array(), 'packages' => null, 'with' => array());
 		
 		$build = 'components';
 		
 		foreach ($argv as $arg){
+			if ($arg == '+with'){
+				$build = 'with';
+				continue;
 			if ($arg == '+packages'){
 				$build = 'packages';
 				if ($selected['packages'] == null) $selected['packages'] = array();
 				continue;
-			} else if ($arg == '+components'){
+			if ($arg == '+components'){
 				$build = 'components';
 				continue;
-			} else if ($arg == '+files'){
+			if ($arg == '+files'){
 				$build = 'files';
 				continue;
 			}
@@ -90,6 +93,8 @@ switch ($command){
 				$included_packages[] = $name;
 			}
 		}
+		
+		$paths = array_merge($paths, $selected['with']);
 		
 		$pkg = new Packager($paths);
 		

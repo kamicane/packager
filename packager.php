@@ -232,6 +232,12 @@ Class Packager {
 		return null;
 	}
 	
+	public function get_packages(){
+		$packages = array();
+		foreach ($this->packages as $name => $package) $packages[] = $name;
+		return $packages;
+	}
+	
 	// authors normalization
 	
 	public function get_package_authors($package = null){
