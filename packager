@@ -61,20 +61,19 @@ switch ($command){
 	
 	case 'build':
 
-		$selected = array('components' => array(), 'files' => array(), 'packages' => null, 'with' => array());
+		$selected = array('components' => array(), 'files' => array(), 'add-packages' => array(), 'remove-packages' => array(), 'with' => array());
 		
 		$build = 'components';
 		
 		foreach ($argv as $arg){
 
-			if ($arg == '+with'){
-				$build = 'with';
+			if ($arg == '+packages'){
+				$build = 'add-packages';
 				continue;
 			}
 			
-			if ($arg == '+packages'){
-				$build = 'packages';
-				if ($selected['packages'] == null) $selected['packages'] = array();
+			if ($arg == '-packages'){
+				$build = 'remove-packages';
 				continue;
 			}
 			
@@ -94,14 +93,13 @@ switch ($command){
 		$paths = array();
 			
 		foreach ($packages as $name => $path){
-			if ($selected['packages'] == null || array_contains($selected['packages'], $name)){
-				$paths[] = $path;
-			}
+			$paths[] = $path;
 		}
 		
-		$paths = array_merge($selected['with'], $paths);
-		
 		$pkg = new Packager($paths);
+		
+		foreach ($selected['add-packages'] as $package_path) $pkg->add_package($package_path);
+		foreach ($selected['remove-packages'] as $package_name) $pkg->remove_package($package_name);
 		
 		$files = array_merge($pkg->components_to_files($selected['components']), $selected['files']);
 		
