@@ -7,14 +7,14 @@ Class Packager {
 
 	private $packages = array();
 	private $manifests = array();
-	private $root;
+	private $root = null;
 	
 	public function __construct($package_paths){
 		if (!is_array($package_paths)) $package_paths = array($package_paths);
-		foreach ($package_paths as $i => $package_path) $this->parse_manifest($package_path, ($i == 0));
+		foreach ($package_paths as $i => $package_path) $this->parse_manifest($package_path);
 	}
 	
-	private function parse_manifest($package_path, $is_root = false){
+	private function parse_manifest($package_path){
 		$package_path = preg_replace('/\/$/', '', $package_path) . '/';
 		$manifest = YAML::decode_file($package_path . 'package.yml');
 		
@@ -22,7 +22,7 @@ Class Packager {
 
 		$package_name = $manifest['name'];
 		
-		if ($is_root) $this->root = $package_name;
+		if ($this->root == null) $this->root = $package_name;
 
 		if (array_has($this->manifests, $package_name)) return;
 
@@ -76,6 +76,15 @@ Class Packager {
 			$this->packages[$package_name][$file_name] = $descriptor;
 
 		}
+	}
+	
+	public function add_package($package_path){
+		$this->parse_manifest($package_path);
+	}
+	
+	public function remove_package($package_name){
+		unset($this->packages[$package_name]);
+		unset($this->manifests[$package_name]);
 	}
 	
 	// # private UTILITIES
