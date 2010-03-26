@@ -66,16 +66,23 @@ switch ($command){
 		$build = 'components';
 		
 		foreach ($argv as $arg){
+
 			if ($arg == '+with'){
 				$build = 'with';
 				continue;
+			}
+			
 			if ($arg == '+packages'){
 				$build = 'packages';
 				if ($selected['packages'] == null) $selected['packages'] = array();
 				continue;
+			}
+			
 			if ($arg == '+components'){
 				$build = 'components';
 				continue;
+			}
+			
 			if ($arg == '+files'){
 				$build = 'files';
 				continue;
@@ -85,16 +92,14 @@ switch ($command){
 		}
 		
 		$paths = array();
-		$included_packages = array();
 			
 		foreach ($packages as $name => $path){
 			if ($selected['packages'] == null || array_contains($selected['packages'], $name)){
 				$paths[] = $path;
-				$included_packages[] = $name;
 			}
 		}
 		
-		$paths = array_merge($paths, $selected['with']);
+		$paths = array_merge($selected['with'], $paths);
 		
 		$pkg = new Packager($paths);
 		
@@ -117,7 +122,7 @@ switch ($command){
 			$files = array_merge($files, $pkg->get_all_files($package));
 		}
 		
-		out("Build using: " . implode(', ', $included_packages));
+		out("Build using: " . implode(', ', $pkg->get_packages()));
 		
 		out("Included Files/Components:");
 		
