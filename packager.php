@@ -158,10 +158,12 @@ Class Packager {
 	
 	// # public FILES
 
-	public function get_all_files(){
+	public function get_all_files($of_package = null){
 		$files = array();
-		foreach ($this->packages as $package){
-			foreach ($package as $file) $files[] = $file['package/name'];
+		foreach ($this->packages as $name => $package){
+			if ($of_package == null || $of_package == $name) foreach ($package as $file){
+				$files[] = $file['package/name'];
+			}
 		}
 		return $this->complete_files($files);
 	}
