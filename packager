@@ -92,10 +92,25 @@ switch ($command){
 		}
 		
 		$pkg = new Packager($paths);
-
-		$build_all = array_contains($selected['components'], '*') || array_contains($selected['files'], '*');
 		
-		$files = $build_all ? $pkg->get_all_files() : array_merge($pkg->components_to_files($selected['components']), $selected['files']);
+		$files = array_merge($pkg->components_to_files($selected['components']), $selected['files']);
+		
+		$re = "/^([\w-]+)\/\*$/";
+		$wildcards = array();
+		
+		foreach ($selected['components'] as $component){
+			preg_match($re, $component, $matches);
+			if (!empty($matches)) array_include($wildcards, $matches[1]);
+		}
+		
+		foreach ($selected['files'] as $file){
+			preg_match($re, $file, $matches);
+			if (!empty($matches)) array_include($wildcards, $matches[1]);
+		}
+		
+		foreach ($wildcards as $package){
+			$files = array_merge($files, $pkg->get_all_files($package));
+		}
 		
 		out("Build using: " . implode(', ', $included_packages));
 		
@@ -109,8 +124,6 @@ switch ($command){
 		out('');
 		
 		echo $pkg->build_from_files($files);
-		
-		out('');
 	
 	break;
 	
