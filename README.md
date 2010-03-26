@@ -145,4 +145,8 @@ Builds the selected components using your registered packages minus the package 
 	./packager build +components ART/ART +files ART/ART.Base
 	
 You can mix components and files
+
+	./packager build Core/* > mootools.js
 	
+This is how you output to a file
+
