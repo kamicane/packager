@@ -93,7 +93,7 @@ switch ($command){
 		
 		$pkg = new Packager($paths);
 
-		$build_all = array_has($selected['components'], '*') || array_has($selected['files'], '*');
+		$build_all = array_contains($selected['components'], '*') || array_contains($selected['files'], '*');
 		
 		$files = $build_all ? $pkg->get_all_files() : array_merge($pkg->components_to_files($selected['components']), $selected['files']);
 		
