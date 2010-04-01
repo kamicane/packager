@@ -7,12 +7,6 @@ require __DIR__ . '/packager.php';
 $executable = array_shift($argv);
 $command = array_shift($argv);
 
-function out($message){
-	$std_err = fopen('php://stderr', 'w');
-	fwrite($std_err, "$message\n");
-	fclose($std_err);
-}
-
 $user = exec("whoami");
 
 $packages = YAML::decode_file("/Users/$user/.packages.yml");
@@ -31,7 +25,7 @@ switch ($command){
 		
 		file_put_contents("/Users/$user/.packages.yml", YAML::encode($packages));
 		
-		out("the package $name has been registered as $path\n");
+		Packager::warn("the package $name has been registered as $path\n");
 
 	break;
 	
@@ -40,28 +34,34 @@ switch ($command){
 		$name = array_shift($argv);
 		
 		if (empty($packages[$name])){
-			out("there is no package called $name\n");
+			Packager::warn("there is no package called $name\n");
 			break;
 		}
 
 		unset($packages[$name]);
 	
-		file_put_contents('/Users/kamicane/.packages.yml', YAML::encode($packages));
+		file_put_contents("/Users/$user/.packages.yml", YAML::encode($packages));
 	
-		out("the package $name has been unregistered\n");
+		Packager::warn("the package $name has been unregistered\n");
 	
 	break;
 	
 	case 'list':
 	
-		foreach ($packages as $name => $path) out("$name: $path");
-		out("");
+		foreach ($packages as $name => $path) Packager::warn("$name: $path\n");
 		
 	break;
 	
 	case 'build':
 
-		$selected = array('components' => array(), 'files' => array(), 'add-packages' => array(), 'remove-packages' => array(), 'with' => array());
+		$selected = array(
+			'components' => array(),
+			'files' => array(),
+			'add-packages' => array(),
+			'remove-packages' => array(),
+			'with' => array(),
+			'use-only' => null
+		);
 		
 		$build = 'components';
 		
@@ -69,6 +69,12 @@ switch ($command){
 
 			if ($arg == '+packages'){
 				$build = 'add-packages';
+				continue;
+			}
+			
+			if ($arg == '+use-only'){
+				$build = 'use-only';
+				if ($selected['use-only'] == null) $selected['use-only'] = array();
 				continue;
 			}
 			
@@ -91,9 +97,9 @@ switch ($command){
 		}
 		
 		$paths = array();
-			
+					
 		foreach ($packages as $name => $path){
-			$paths[] = $path;
+			if (!$selected['use-only'] || array_contains($selected['use-only'], $name)) $paths[] = $path;
 		}
 		
 		$pkg = new Packager($paths);
@@ -101,35 +107,48 @@ switch ($command){
 		foreach ($selected['add-packages'] as $package_path) $pkg->add_package($package_path);
 		foreach ($selected['remove-packages'] as $package_name) $pkg->remove_package($package_name);
 		
-		$files = array_merge($pkg->components_to_files($selected['components']), $selected['files']);
-		
 		$re = "/^([\w-]+)\/\*$/";
 		$wildcards = array();
 		
-		foreach ($selected['components'] as $component){
+		foreach ($selected['components'] as $i => $component){
 			preg_match($re, $component, $matches);
-			if (!empty($matches)) array_include($wildcards, $matches[1]);
+			if (!empty($matches)){
+				unset($selected['components'][$i]);
+				array_include($wildcards, $matches[1]);
+			}
+		}
+		
+		foreach ($selected['files'] as $i => $file){
+			preg_match($re, $file, $matches);
+			if (!empty($matches)){
+				unset($selected['files'][$i]);
+				array_include($wildcards, $matches[1]);
+			}
+		}
+
+		$files = array();
+
+		foreach ($selected['components'] as $component){
+			$current_component = $pkg->component_to_file($component);
+			if ($current_component) array_include($files, $current_component);
 		}
 		
 		foreach ($selected['files'] as $file){
-			preg_match($re, $file, $matches);
-			if (!empty($matches)) array_include($wildcards, $matches[1]);
+			if ($pkg->file_exists($file)) array_include($files, $file);
 		}
 		
 		foreach ($wildcards as $package){
 			$files = array_merge($files, $pkg->get_all_files($package));
 		}
 		
-		out("Build using: " . implode(', ', $pkg->get_packages()));
+		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
 		
-		out("Included Files/Components:");
+		Packager::warn("Included Files/Components:\n");
 		
 		foreach ($files as $file){
 			$name = $pkg->get_file_name($file);
-			out("- $name: [" . implode(", ", $pkg->get_file_provides($file)) . "]");
+			Packager::warn("- $name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
 		}
-		
-		out('');
 		
 		echo $pkg->build_from_files($files);
 	

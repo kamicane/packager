@@ -4,6 +4,12 @@ require __DIR__ . "/helpers/yaml.php";
 require __DIR__ . "/helpers/array.php";
 
 Class Packager {
+	
+	public static function warn($message){
+		$std_err = fopen('php://stderr', 'w');
+		fwrite($std_err, $message);
+		fclose($std_err);
+	}
 
 	private $packages = array();
 	private $manifests = array();
@@ -113,15 +119,17 @@ Class Packager {
 	private function component_to_hash($name){
 		$pair = $this->parse_name($this->root, $name);
 		$package = array_get($this->packages, $pair[0]);
-		if (empty($package)) return null;
-		
-		$component = $pair[1];
-		
-		foreach ($package as $file => $data){
-			foreach ($data['provides'] as $c){
-				if ($c == $component) return $data;
+		if (!empty($package)){
+			$component = $pair[1];
+
+			foreach ($package as $file => $data){
+				foreach ($data['provides'] as $c){
+					if ($c == $component) return $data;
+				}
 			}
 		}
+		
+		self::warn("Warning: could not find the required component $name. Ignoring.\n");
 		
 		return null;
 	}
@@ -129,15 +137,25 @@ Class Packager {
 	private function file_to_hash($name){
 		$pair = $this->parse_name($this->root, $name);
 		$package = array_get($this->packages, $pair[0]);
-		if (empty($package)) return null;
-		
-		$file_name = $pair[1];
-		
-		foreach ($package as $file => $data){
-			if ($file == $file_name) return $data;
+		if (!empty($package)){
+			$file_name = $pair[1];
+
+			foreach ($package as $file => $data){
+				if ($file == $file_name) return $data;
+			}
 		}
+
+		self::warn("Warning: could not find the required file $name. Ignoring.\n");
 		
 		return null;
+	}
+	
+	public function file_exists($name){
+		return $this->file_to_hash($name) ? true : false;
+	}
+	
+	public function component_exists($name){
+		return $this->component_to_hash($name) ? true : false;
 	}
 	
 	// # public BUILD
