@@ -72,18 +72,81 @@ Class usage
 	
 	$pkg->write_from_components("/Users/kamicane/Sites/mootools.js", array('Type', 'Array'));
 
-Command Line usage
-------------------
+Packager Command Line script
+----------------------------
+
+The Packager command line script is your one-stop solution to build any of your packages at once.
 
 ### Syntax
 
-	./build MANIFEST_PATH [COMPONENTS]
+	./packager COMMAND +option1 argument1 argument2 +option2 argument1 argument2
 
-* `MANIFEST_PATH` is a filepath to the manifest file for a package *(required)*
-* `COMPONENTS` can be one or more components provided by the package *(optional)*
+* `COMMAND` a packager command *(required)*
+* `+option` options for commands *(optional)*
 
-### Example
+### Commands
 
-	./build /Users/kamicane/Sites/mootools-core/ Fx Element Array > /Users/kamicane/Sites/mootools.js  # partial build
+* `register` registers a package. Creates a .packages.yml file in your home folder.
+* `unregister` unregisters a package
+* `list` list registered packages
+* `build` builds a single file with the supplied packages / files / components
+
+### Registering a Package
 	
-	./build /Users/kamicane/Sites/mootools-core/ > /Users/kamicane/Sites/mootools.js  # full build
+#### Example
+
+	./packager register /Users/kamicane/mootools-core
+	» the package Core has been registered
+
+	
+### Listing Packages
+
+#### Example
+
+	./packager list
+	» Core: /Users/kamicane/mootools-core
+
+
+### Unregistering a Package
+
+#### Example
+
+	./packager unregister Core
+	» the package Core has been unregistered
+	
+### Building Packages
+
+#### Examples
+
+	./packager build Core/Type Core/Fx ART/ART.Element
+	
+Which is the same as...
+	
+	./packager build +components Core/Type Core/Fx ART/ART.Element
+	
+Which builds the passed in components (and their dependancies) using your registered packages.
+	
+	./packager build +files Core/Core Core/Fx ART/ART
+	
+This builds the passed in files (and their dependancies) using your registered packages.
+	
+	./packager build ART/*
+	
+Builds every component from ART, and their dependancies, using your registered packages.
+	
+	./packager build SomePackage/SomeComponent +packages /Users/kamicane/Sites/some-package
+	
+Builds the selected components using your registered packages and the temporary package that resides in /Users/kamicane/Sites/some-package, without having to register it first.
+
+	./packager build SomePackage/SomeComponent -packages Core
+	
+Builds the selected components using your registered packages minus the package names you pass to -packages. This lets you build your components without dependancies.
+
+	./packager build +components ART/ART +files ART/ART.Base
+	
+You can mix components and files
+
+	./packager build Core/* > mootools.js
+	
+This is how you output to a file
+

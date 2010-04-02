@@ -4,23 +4,31 @@ require dirname(__FILE__) . "/helpers/yaml.php";
 require dirname(__FILE__) . "/helpers/array.php";
 
 Class Packager {
+	
+	public static function warn($message){
+		$std_err = fopen('php://stderr', 'w');
+		fwrite($std_err, $message);
+		fclose($std_err);
+	}
 
 	private $packages = array();
 	private $manifests = array();
-	private $root;
+	private $root = null;
 	
 	public function __construct($package_paths){
 		if (!is_array($package_paths)) $package_paths = array($package_paths);
-		foreach ($package_paths as $i => $package_path) $this->parse_manifest($package_path, ($i == 0));
+		foreach ($package_paths as $i => $package_path) $this->parse_manifest($package_path);
 	}
 	
-	private function parse_manifest($package_path, $is_root = false){
+	private function parse_manifest($package_path){
 		$package_path = preg_replace('/\/$/', '', $package_path) . '/';
 		$manifest = YAML::decode_file($package_path . 'package.yml');
+		
+		if (empty($manifest)) throw new Exception("package.yml not found in $package_path, or unable to parse manifest.");
 
 		$package_name = $manifest['name'];
 		
-		if ($is_root) $this->root = $package_name;
+		if ($this->root == null) $this->root = $package_name;
 
 		if (array_has($this->manifests, $package_name)) return;
 
@@ -34,12 +42,19 @@ Class Packager {
 			
 			// this is where we "hook" for possible other replacers.
 			$source = $this->replace_build($package_path, file_get_contents($path));
-	
-			// yaml header
-			preg_match("/\/\*\s*[-]{3}(.*)[.]{3}\s*\*\//s", $source, $matches); // this is a crappy regexp :)
-			
-			$descriptor = YAML::decode($matches[1]);
-	
+
+			$descriptor = array();
+
+			// get contents of first comment
+			preg_match('/^\s*\/\*\s*(.*?)\s*\*\//s', $source, $matches);
+
+			if (!empty($matches)){
+				// get contents of YAML front matter
+				preg_match('/^-{3}\s*$(.*?)^(?:-{3}|\.{3})\s*$/ms', $matches[1], $matches);
+
+				if (!empty($matches)) $descriptor = YAML::decode($matches[1]);
+			}
+
 			// populate / convert to array requires and provides
 			$requires = !empty($descriptor['requires']) ? $descriptor['requires'] : array();
 			$provides = !empty($descriptor['provides']) ? $descriptor['provides'] : array();
@@ -69,6 +84,15 @@ Class Packager {
 		}
 	}
 	
+	public function add_package($package_path){
+		$this->parse_manifest($package_path);
+	}
+	
+	public function remove_package($package_name){
+		unset($this->packages[$package_name]);
+		unset($this->manifests[$package_name]);
+	}
+	
 	// # private UTILITIES
 	
 	private function parse_name($default, $name){
@@ -95,15 +119,17 @@ Class Packager {
 	private function component_to_hash($name){
 		$pair = $this->parse_name($this->root, $name);
 		$package = array_get($this->packages, $pair[0]);
-		if (empty($package)) return null;
-		
-		$component = $pair[1];
-		
-		foreach ($package as $file => $data){
-			foreach ($data['provides'] as $c){
-				if ($c == $component) return $data;
+		if (!empty($package)){
+			$component = $pair[1];
+
+			foreach ($package as $file => $data){
+				foreach ($data['provides'] as $c){
+					if ($c == $component) return $data;
+				}
 			}
 		}
+		
+		self::warn("Warning: could not find the required component $name. Ignoring.\n");
 		
 		return null;
 	}
@@ -111,21 +137,32 @@ Class Packager {
 	private function file_to_hash($name){
 		$pair = $this->parse_name($this->root, $name);
 		$package = array_get($this->packages, $pair[0]);
-		if (empty($package)) return null;
-		
-		$file_name = $pair[1];
-		
-		foreach ($package as $file => $data){
-			if ($file == $file_name) return $data;
+		if (!empty($package)){
+			$file_name = $pair[1];
+
+			foreach ($package as $file => $data){
+				if ($file == $file_name) return $data;
+			}
 		}
+
+		self::warn("Warning: could not find the required file $name. Ignoring.\n");
 		
 		return null;
+	}
+	
+	public function file_exists($name){
+		return $this->file_to_hash($name) ? true : false;
+	}
+	
+	public function component_exists($name){
+		return $this->component_to_hash($name) ? true : false;
 	}
 	
 	// # public BUILD
 	
 	public function build_from_files($files = null){
-		$included_files = (is_array($files) && count($files)) ? $this->complete_files($files) : $this->get_all_files();
+		if (empty($files)) return null;
+		$included_files = ($files == '*') ? $this->get_all_files() : $this->complete_files($files);
 		
 		$included_sources = array();
 		foreach ($included_files as $file) $included_sources[] = $this->get_file_source($file);
@@ -148,10 +185,12 @@ Class Packager {
 	
 	// # public FILES
 
-	public function get_all_files(){
+	public function get_all_files($of_package = null){
 		$files = array();
-		foreach ($this->packages as $package){
-			foreach ($package as $file) $files[] = $file['package/name'];
+		foreach ($this->packages as $name => $package){
+			if ($of_package == null || $of_package == $name) foreach ($package as $file){
+				$files[] = $file['package/name'];
+			}
 		}
 		return $this->complete_files($files);
 	}
@@ -218,6 +257,12 @@ Class Packager {
 		}
 		
 		return null;
+	}
+	
+	public function get_packages(){
+		$packages = array();
+		foreach ($this->packages as $name => $package) $packages[] = $name;
+		return $packages;
 	}
 	
 	// authors normalization
