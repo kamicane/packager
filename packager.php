@@ -106,9 +106,9 @@ Class Packager {
 	private function replace_build($package_path, $file){
 		$ref = file_get_contents($package_path . '.git/HEAD');
 		if ($ref){
-			preg_match("@ref: ([\w/]+)@", $ref, $matches);
+			preg_match("@ref: ([\w\.-/]+)@", $ref, $matches);
 			$ref = file_get_contents($package_path . ".git/" . $matches[1]);
-			preg_match("@(\w+)@", $ref, $matches);
+			preg_match("@([\w\.-/]+)@", $ref, $matches);
 			$file = str_replace("%build%", $matches[1], $file);
 		}
 		return $file;
