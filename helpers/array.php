@@ -1,8 +1,7 @@
 <?php
 
 function array_contains($array, $item){
-	$index = array_search($item, $array);
-	return $index !== false;
+	return array_search($item, $array) !== false;
 }
 
 function array_include(&$array, $item){
@@ -11,9 +10,7 @@ function array_include(&$array, $item){
 }
 
 function array_erase(&$array, $item){
-	$index = array_search($item, $array);
-	
-	if ($index === false) return $array;
+	if (!array_contains($array, $item)) return $array;
 	
 	array_splice($array, $index, 1);
 	
