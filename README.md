@@ -136,11 +136,19 @@ Builds every component from ART, and their dependancies, using your registered p
 	
 	./packager build SomePackage/SomeComponent +packages /Users/kamicane/Sites/some-package
 	
-Builds the selected components using your registered packages and the temporary package that resides in /Users/kamicane/Sites/some-package, without having to register it first.
+Builds the selected components using your registered packages and a temporary package that resides in /Users/kamicane/Sites/some-package, without having to register it first.
 
 	./packager build SomePackage/SomeComponent -packages Core
 	
 Builds the selected components using your registered packages minus the package names you pass to -packages. This lets you build your components without dependancies.
+
+	./packager build ART/SomeComponent +use-only ART
+	
+Builds the selected components using only ART of your registered packages. This lets you build your components without dependancies.
+
+	./packager build SomePackage/SomeComponent +use-only +packages /Users/kamicane/Sites/some-package
+	
+Builds the selected components using none of your registered packages plus the passed in package, without registering it. This lets you build your components without dependancies.
 
 	./packager build +components ART/ART +files ART/ART.Base
 	
