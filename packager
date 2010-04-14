@@ -141,6 +141,8 @@ switch ($command){
 			$files = array_merge($files, $pkg->get_all_files($package));
 		}
 		
+		$files = $pkg->complete_files($files);
+		
 		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
 		
 		Packager::warn("Included Files/Components:\n");
