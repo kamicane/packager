@@ -99,7 +99,7 @@ Class Packager {
 	}
 	
 	private function replace_build($package_path, $file){
-		$ref = file_get_contents($package_path . '.git/HEAD');
+		$ref = @file_get_contents($package_path . '.git/HEAD');
 		if (empty($ref)) return $file;
 		
 		preg_match("@ref: ([\w\.-/]+)@", $ref, $matches);
