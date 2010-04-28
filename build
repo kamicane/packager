@@ -4,9 +4,15 @@
 
 $stderr = fopen('php://stderr', 'w');
 
-require __DIR__ . '/packager.php';
+require dirname(__FILE__) . '/packager.php';
 
 $executable = array_shift($argv);
+
+if(!count($argv)){
+	fwrite($stderr, "No arguments given\n");
+	exit;
+}
+
 $package = array_shift($argv);
 
 $pkg = new Packager($package);

@@ -2,14 +2,15 @@
 
 <?php
 
-require __DIR__ . '/packager.php';
+require dirname(__FILE__) . '/packager.php';
 
 $executable = array_shift($argv);
 $command = array_shift($argv);
 
 $user = exec("whoami");
+$home = PHP_OS == 'Linux' ? 'home' : 'Users';
 
-$packages = YAML::decode_file("/Users/$user/.packages.yml");
+$packages = YAML::decode_file("/$home/$user/.packages.yml");
 if (empty($packages)) $packages = array();
 
 switch ($command){
@@ -23,7 +24,7 @@ switch ($command){
 		
 		$packages[$name] = $path;
 		
-		file_put_contents("/Users/$user/.packages.yml", YAML::encode($packages));
+		file_put_contents("/$home/$user/.packages.yml", YAML::encode($packages));
 		
 		Packager::warn("the package $name has been registered as $path\n");
 
@@ -40,7 +41,7 @@ switch ($command){
 
 		unset($packages[$name]);
 	
-		file_put_contents("/Users/$user/.packages.yml", YAML::encode($packages));
+		file_put_contents("/$home/$user/.packages.yml", YAML::encode($packages));
 	
 		Packager::warn("the package $name has been unregistered\n");
 	
