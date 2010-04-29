@@ -131,10 +131,12 @@ switch ($command){
 		foreach ($selected['components'] as $component){
 			$current_component = $pkg->component_to_file($component);
 			if ($current_component) array_include($files, $current_component);
+			else Packager::warn("WARNING: The component $component, required via the command line, could not be found." . "\n");
 		}
 		
 		foreach ($selected['files'] as $file){
 			if ($pkg->file_exists($file)) array_include($files, $file);
+			Packager::warn("WARNING: The file $file, required via the command line, could not be found." . "\n");
 		}
 		
 		foreach ($wildcards as $package){
@@ -142,6 +144,8 @@ switch ($command){
 		}
 		
 		$files = $pkg->complete_files($files);
+		
+		$pkg->validate();
 		
 		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
 		

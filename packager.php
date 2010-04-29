@@ -150,6 +150,23 @@ Class Packager {
 		return $this->component_to_hash($name) ? true : false;
 	}
 	
+	public function validate(){
+		$warnings = array();
+		foreach ($this->packages as $name => $files){
+			foreach ($files as $file){
+				$file_requires = $file['requires'];
+				foreach ($file_requires as $component){
+					if (!$this->component_exists($component)){
+						$warnings[] = array('component' => $component, 'file' => $file['package/name']);
+						self::warn("WARNING: The component $component, required by " . $file['package/name'] . ", has not been provided." . "\n");
+					}
+				}
+			}
+		}
+		
+		return $warnings;
+	}
+	
 	// # public BUILD
 	
 	public function build_from_files($files = null){
