@@ -10,10 +10,9 @@ function array_include(&$array, $item){
 }
 
 function array_erase(&$array, $item){
-	if (!array_contains($array, $item)) return $array;
-	
-	array_splice($array, $index, 1);
-	
+	foreach ($array as $i => $v){
+		if ($array[$i] === $item) array_splice($array, $i, 1);
+	}
 	return $array;
 }
 
