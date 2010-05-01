@@ -150,37 +150,61 @@ Class Packager {
 		return $this->component_to_hash($name) ? true : false;
 	}
 	
-	public function validate(){
-		$warnings = array();
+	public function package_exists($name){
+		return array_contains($this->get_packages(), $name);
+	}
+	
+	public function validate($more_files = array(), $more_components = array(), $more_packages = array()){
+
 		foreach ($this->packages as $name => $files){
 			foreach ($files as $file){
 				$file_requires = $file['requires'];
 				foreach ($file_requires as $component){
 					if (!$this->component_exists($component)){
-						$warnings[] = array('component' => $component, 'file' => $file['package/name']);
-						self::warn("WARNING: The component $component, required by " . $file['package/name'] . ", has not been provided." . "\n");
+						self::warn("WARNING: The component $component, required by " . $file['package/name'] . ", has not been provided.\n");
 					}
 				}
 			}
 		}
 		
-		return $warnings;
+		foreach ($more_files as $file){
+			if (!$this->file_exists($file)) self::warn("WARNING: The required file $file could not be found.\n");
+		}
+		
+		foreach ($more_components as $component){
+			if (!$this->component_exists($component)) self::warn("WARNING: The required component $component could not be found.\n");
+		}
+		
+		foreach ($more_packages as $package){
+			if (!$this->package_exists($package)) self::warn("WARNING: The required package $package could not be found.\n");
+		}
 	}
 	
 	// # public BUILD
 	
-	public function build_from_files($files = null){
-		if (empty($files)) return null;
-		$included_files = ($files == '*') ? $this->get_all_files() : $this->complete_files($files);
+	public function build($files = array(), $components = array()){
+
+		if (!empty($components)){
+			$more = $this->components_to_files($components);
+			foreach ($more as $file) array_include($files, $file);
+		}
+		
+		$files = $this->complete_files($files);
+		
+		if (empty($files)) return '';
 		
 		$included_sources = array();
-		foreach ($included_files as $file) $included_sources[] = $this->get_file_source($file);
+		foreach ($files as $file) $included_sources[] = $this->get_file_source($file);
 		
 		return implode($included_sources, "\n\n");
 	}
 	
-	public function build_from_components($components = null){
-		return $this->build_from_files($this->components_to_files($components));
+	public function build_from_files($files){
+		return $this->build($files);
+	}
+	
+	public function build_from_components($components){
+		return $this->build(array(), $components);
 	}
 
 	public function write_from_files($file_name, $files = null){
