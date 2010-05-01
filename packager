@@ -60,6 +60,7 @@ switch ($command){
 			'add-packages' => array(),
 			'remove-packages' => array(),
 			'with' => array(),
+			'blocks' => array(),
 			'use-only' => null
 		);
 		
@@ -69,6 +70,11 @@ switch ($command){
 
 			if ($arg == '+packages'){
 				$build = 'add-packages';
+				continue;
+			}
+			
+			if ($arg == '-blocks'){
+				$build = 'blocks';
 				continue;
 			}
 			
@@ -112,6 +118,7 @@ switch ($command){
 		
 		$files = $selected['files'];
 		$components = $selected['components'];
+		$blocks = $selected['blocks'];
 		
 		foreach ($components as $component){
 			preg_match($re, $component, $matches);
@@ -131,24 +138,29 @@ switch ($command){
 		
 		$pkg->validate($files, $components, $wildcards);
 		
+		foreach ($components as $component){
+			$file = $pkg->component_to_file($component);
+			if ($file) array_include($files, $file);
+		}
+		
 		foreach ($wildcards as $package){
 			$all = $pkg->get_all_files($package);
 			foreach ($all as $file) array_include($files, $file);
 		}
 		
-		$display_files = $pkg->complete_files($files);
+		$files = $pkg->complete_files($files);
 		
 		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
 		
 		Packager::warn("Included Files/Components:\n");
 		
-		foreach ($display_files as $file){
+		foreach ($files as $file){
 			$file_name = $pkg->get_file_name($file);
 			$file_package = $pkg->get_file_package($file);
 			Packager::warn("- $file_package/$file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
 		}
 		
-		echo $pkg->build($files, $components);
+		echo $pkg->build($files, array(), array(), $blocks);
 	
 	break;
 	

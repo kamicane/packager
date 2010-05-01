@@ -182,11 +182,16 @@ Class Packager {
 	
 	// # public BUILD
 	
-	public function build($files = array(), $components = array()){
+	public function build($files = array(), $components = array(), $packages = array(), $blocks = array()){
 
 		if (!empty($components)){
 			$more = $this->components_to_files($components);
 			foreach ($more as $file) array_include($files, $file);
+		}
+		
+		foreach ($packages as $package){
+			$more = $this->get_all_files($package);
+			foreach ($more as $file) array_include($files, $file);	
 		}
 		
 		$files = $this->complete_files($files);
@@ -196,7 +201,13 @@ Class Packager {
 		$included_sources = array();
 		foreach ($files as $file) $included_sources[] = $this->get_file_source($file);
 		
-		return implode($included_sources, "\n\n");
+		$source = implode($included_sources, "\n\n");
+		
+		foreach ($blocks as $block){
+			$source = preg_replace("%//<$block>.*?//</$block>%s", '', $source);
+		}
+		
+		return $source . "\n";
 	}
 	
 	public function build_from_files($files){
