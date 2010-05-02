@@ -161,7 +161,7 @@ Class Packager {
 				$file_requires = $file['requires'];
 				foreach ($file_requires as $component){
 					if (!$this->component_exists($component)){
-						self::warn("WARNING: The component $component, required by " . $file['package/name'] . ", has not been provided.\n");
+						self::warn("WARNING: The component $component, required in the file " . $file['package/name'] . ", has not been provided.\n");
 					}
 				}
 			}
@@ -236,7 +236,7 @@ Class Packager {
 				$files[] = $file['package/name'];
 			}
 		}
-		return $this->complete_files($files);
+		return $files;
 	}
 	
 	public function get_file_dependancies($file){

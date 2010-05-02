@@ -59,7 +59,6 @@ switch ($command){
 			'files' => array(),
 			'add-packages' => array(),
 			'remove-packages' => array(),
-			'with' => array(),
 			'blocks' => array(),
 			'use-only' => null
 		);
