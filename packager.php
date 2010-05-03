@@ -204,7 +204,7 @@ Class Packager {
 		$source = implode($included_sources, "\n\n");
 		
 		foreach ($blocks as $block){
-			$source = preg_replace("%//<$block>.*?//</$block>%s", '', $source);
+			$source = preg_replace("%/[/*]\s*<$block>.*?</$block>\s*(?:\*/)?%s", '', $source);
 		}
 		
 		return $source . "\n";
