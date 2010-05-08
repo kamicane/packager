@@ -1,5 +1,4 @@
 #!/usr/bin/env php
-
 <?php
 
 require dirname(__FILE__) . '/packager.php';
@@ -112,7 +111,7 @@ switch ($command){
 		foreach ($selected['add-packages'] as $package_path) $pkg->add_package($package_path);
 		foreach ($selected['remove-packages'] as $package_name) $pkg->remove_package($package_name);
 		
-		$re = "/^([\w-]+)\/\*$/";
+		$re = "/^([^\/]+)\/\*$/";
 		$wildcards = array();
 		
 		$files = $selected['files'];

@@ -46,7 +46,7 @@ Class Packager {
 			$descriptor = array();
 
 			// get contents of first comment
-			preg_match('/^\s*\/\*\s*(.*?)\s*\*\//s', $source, $matches);
+			preg_match('/\s*\/\*\s*(.*?)\s*\*\//s', $source, $matches);
 
 			if (!empty($matches)){
 				// get contents of YAML front matter
