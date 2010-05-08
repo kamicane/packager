@@ -6,6 +6,11 @@ require dirname(__FILE__) . '/packager.php';
 $executable = array_shift($argv);
 $command = array_shift($argv);
 
+if ($argv[0] == '-h' || $argv[0] == '--help') {
+	usage($command);
+	exit;
+}
+
 $home = exec('echo $HOME');
 
 $packages = YAML::decode_file("$home/.packages.yml");
@@ -162,6 +167,99 @@ switch ($command){
 	
 	break;
 	
+	case 'help':
+	case '-h':
+	case '--help':
+		usage(array_shift($argv));
+	break;
+	
+	default:
+		usage();
+		exit(1);
+	
+}
+
+function usage($command = '') {
+	switch ($command){
+		case 'register':
+			echo "Usage: packager register <dir>|<manifest>
+
+register arguments:
+  <dir>      Directory in which the package resides. In this case
+             <dir>/package.yml will be used as manifest.
+  <manifest> Manifest file to use. In this case the directory in which the
+             manifest file resides will be used as package directory.
+";
+		break;
+
+		case 'unregister':
+			echo "Usage: packager unregister <package>
+
+unregister arguments:
+  <package> Name of the package as specified in its manifest.
+";
+		break;
+
+		case 'list':
+			echo "Usage: packager list
+
+list:
+  Lists your registered packages, as found in ~/.packages.yml.
+";
+		break;
+
+		case 'build':
+			echo "Usage: packager build <components> [args...]
+       packager build <args...>
+
+build arguments:
+  <components>
+  +components <components> Build passed in components and their dependancies
+                           using your registered packages.
+  +files <files>           Build passed in files and their dependancies
+                           using your registered packages.
+  +packages <directories>  Use unregistered packages residing in the passed
+                           in directories in addition to the registered
+                           packages.
+  -packages <packages>     Don't use passed in packages. This lets you build
+                           components without dependancies.
+  +use-only <packages>     Use only the passed in packages. This lets you
+                           build components without dependancies.
+  -blocks <blocks>         Exclude optional blocks from the sources of the
+                           components you're building.
+";
+		break;
+
+		case 'help':
+			echo "Usage: packager help <command>
+
+packager commands:
+  help       Show help about a specific command.
+  register   Register a new package.
+  unregister Unregister a package.
+  list       List registered packages.
+  build      Build your concatenated file.
+";
+		break;
+
+		default:
+			echo "Usage: packager help <command>
+       packager register <dir>|<manifest>
+       packager unregister <package>
+       packager list
+       packager build <components> [args...]
+       packager build <args...>
+
+See 'packager help <command>' for information on a specific command.
+
+packager commands:
+  help       Show help on a specific command.
+  register   Register a new package.
+  unregister Unregister a package.
+  list       List registered packages.
+  build      Build your concatenated file.
+";
+	}
 }
 
 ?>
