@@ -18,7 +18,7 @@ switch ($command){
 		$folder = array_shift($argv);
 		$pkg = new Packager($folder);
 		$name = $pkg->get_package_name();
-		$path = $pkg->get_package_path();
+		$path = $pkg->get_package_manifest();
 		
 		$packages[$name] = $path;
 		

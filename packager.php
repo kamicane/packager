@@ -21,10 +21,27 @@ Class Packager {
 	}
 	
 	private function parse_manifest($package_path){
-		$package_path = preg_replace('/\/$/', '', $package_path) . '/';
-		$manifest = YAML::decode_file($package_path . 'package.yml');
+		if (is_file($package_path)){
+			$manifest_path = $package_path;
+			$pathinfo = pathinfo($package_path);
+			$package_path = $pathinfo['dirname'] . '/';
+			$manifest_format = $pathinfo['extension'];
+		} else {
+			$package_path = preg_replace('/\/$/', '', $package_path) . '/';
+			$manifest_path = $package_path . 'package.yml';
+			$manifest_format = 'yml';
+		}
+
+		switch ($manifest_format){
+			case 'json':
+				$manifest = json_decode(file_get_contents($manifest_path), true);
+			break;
+
+			default:
+				$manifest = YAML::decode_file($manifest_path);
+		}
 		
-		if (empty($manifest)) throw new Exception("package.yml not found in $package_path, or unable to parse manifest.");
+		if (empty($manifest)) throw new Exception(basename($manifest_path) . " not found in $package_path, or unable to parse manifest.");
 
 		$package_name = $manifest['name'];
 		
@@ -33,6 +50,7 @@ Class Packager {
 		if (array_has($this->manifests, $package_name)) return;
 
 		$manifest['path'] = $package_path;
+		$manifest['manifest'] = $manifest_path;
 		
 		$this->manifests[$package_name] = $manifest;
 		
