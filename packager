@@ -182,83 +182,77 @@ switch ($command){
 function usage($command = '') {
 	switch ($command){
 		case 'register':
-			echo "Usage: packager register <dir>|<manifest>
+			echo "Usage: packager register <dir>|<manifest>\n\n";
 
-register arguments:
-  <dir>      Directory in which the package resides. In this case
-             <dir>/package.yml will be used as manifest.
-  <manifest> Manifest file to use. In this case the directory in which the
-             manifest file resides will be used as package directory.
-";
+			echo "register arguments:\n";
+			echo "  <dir>      Directory in which the package resides. In this case\n";
+			echo "             <dir>/package.yml will be used as manifest.\n";
+			echo "  <manifest> Manifest file to use. In this case the directory in which the\n";
+			echo "             manifest file resides will be used as package directory.\n";
 		break;
 
 		case 'unregister':
-			echo "Usage: packager unregister <package>
+			echo "Usage: packager unregister <package>\n\n";
 
-unregister arguments:
-  <package> Name of the package as specified in its manifest.
-";
+			echo "unregister arguments:\n";
+			echo "  <package> Name of the package as specified in its manifest.\n";
 		break;
 
 		case 'list':
-			echo "Usage: packager list
+			echo "Usage: packager list\n\n";
 
-list:
-  Lists your registered packages, as found in ~/.packages.yml.
-";
+			echo "list:\n";
+			echo "  Lists your registered packages, as found in ~/.packages.yml.";
 		break;
 
 		case 'build':
-			echo "Usage: packager build <components> [args...]
-       packager build <args...>
+			echo "Usage: packager build <components> [args...]\n";
+			echo "       packager build <args...>\n\n";
 
-build arguments:
-  <components>
-  +components <components> Build passed in components and their dependancies
-                           using your registered packages.
-  +files <files>           Build passed in files and their dependancies
-                           using your registered packages.
-  +packages <directories>  Use unregistered packages residing in the passed
-                           in directories in addition to the registered
-                           packages.
-  -packages <packages>     Don't use passed in packages. This lets you build
-                           components without dependancies.
-  +use-only <packages>     Use only the passed in packages. This lets you
-                           build components without dependancies.
-  -blocks <blocks>         Exclude optional blocks from the sources of the
-                           components you're building.
-";
+			echo "build arguments:\n";
+			echo "  <components>\n";
+			echo "  +components <components> Build passed in components and their dependancies\n";
+			echo "                           using your registered packages.\n";
+			echo "  +files <files>           Build passed in files and their dependancies\n";
+			echo "                           using your registered packages.\n";
+			echo "  +packages <directories>  Use unregistered packages residing in the passed\n";
+			echo "                           in directories in addition to the registered\n";
+			echo "                           packages.\n";
+			echo "  -packages <packages>     Don't use passed in packages. This lets you build\n";
+			echo "                           components without dependancies.\n";
+			echo "  +use-only <packages>     Use only the passed in packages. This lets you\n";
+			echo "                           build components without dependancies.\n";
+			echo "  -blocks <blocks>         Exclude optional blocks from the sources of the\n";
+			echo "                           components you're building.\n";
 		break;
 
 		case 'help':
-			echo "Usage: packager help <command>
+			echo "Usage: packager help <command>\n\n";
 
-packager commands:
-  help       Show help about a specific command.
-  register   Register a new package.
-  unregister Unregister a package.
-  list       List registered packages.
-  build      Build your concatenated file.
-";
+			echo "packager commands:\n";
+			echo "  help       Show help about a specific command.\n";
+			echo "  register   Register a new package.\n";
+			echo "  unregister Unregister a package.\n";
+			echo "  list       List registered packages.\n";
+			echo "  build      Build your concatenated file.\n";
 		break;
 
 		default:
-			echo "Usage: packager help <command>
-       packager register <dir>|<manifest>
-       packager unregister <package>
-       packager list
-       packager build <components> [args...]
-       packager build <args...>
+			echo "Usage: packager help <command>\n";
+			echo "       packager register <dir>|<manifest>\n";
+			echo "       packager unregister <package>\n";
+			echo "       packager list\n";
+			echo "       packager build <components> [args...]\n";
+			echo "       packager build <args...>\n\n";
 
-See 'packager help <command>' for information on a specific command.
+			echo "See 'packager help <command>' for information on a specific command.\n\n";
 
-packager commands:
-  help       Show help on a specific command.
-  register   Register a new package.
-  unregister Unregister a package.
-  list       List registered packages.
-  build      Build your concatenated file.
-";
+			echo "packager commands:\n";
+			echo "  help       Show help on a specific command.\n";
+			echo "  register   Register a new package.\n";
+			echo "  unregister Unregister a package.\n";
+			echo "  list       List registered packages.\n";
+			echo "  build      Build your concatenated file.\n";
 	}
 }
 
