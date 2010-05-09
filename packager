@@ -5,8 +5,9 @@ require dirname(__FILE__) . '/packager.php';
 
 $executable = array_shift($argv);
 $command = array_shift($argv);
+$a0 = !empty($argv[0]) ? $argv[0] : null;
 
-if ($argv[0] == '-h' || $argv[0] == '--help') {
+if ($a0 == '-h' || $a0 == '--help') {
 	usage($command);
 	exit;
 }
