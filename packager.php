@@ -21,16 +21,13 @@ Class Packager {
 	}
 	
 	private function parse_manifest($package_path){
-		if (is_file($package_path)){
-			$manifest_path = $package_path;
-			$pathinfo = pathinfo($package_path);
-			$package_path = $pathinfo['dirname'] . '/';
-			$manifest_format = $pathinfo['extension'];
-		} else {
-			$package_path = preg_replace('/\/$/', '', $package_path) . '/';
-			$manifest_path = $package_path . 'package.yml';
-			$manifest_format = 'yml';
-		}
+		if (is_dir($package_path))
+			$package_path .= '/package.yml';
+
+		$pathinfo = pathinfo($package_path);
+		$package_path = $pathinfo['dirname'] . '/';
+		$manifest_path = $package_path . $pathinfo['basename'];
+		$manifest_format = $pathinfo['extension'];
 
 		switch ($manifest_format){
 			case 'json':
