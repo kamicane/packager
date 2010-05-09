@@ -1,0 +1,7 @@
+Usage: packager register <dir>|<manifest>
+
+register arguments:
+  <dir>      Directory in which the package resides. In this case
+             <dir>/package.yml will be used as manifest.
+  <manifest> Manifest file to use. In this case the directory in which the
+             manifest file resides will be used as package directory.

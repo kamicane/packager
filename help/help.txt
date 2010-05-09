@@ -1,0 +1,8 @@
+Usage: packager help <command>
+
+packager commands:
+  help       Show help about a specific command.
+  register   Register a new package.
+  unregister Unregister a package.
+  list       List registered packages.
+  build      Build your concatenated file.

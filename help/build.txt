@@ -1,0 +1,18 @@
+Usage: packager build <components> [args...]
+       packager build <args...>
+
+build arguments:
+  <components>
+  +components <components> Build passed in components and their dependancies
+                           using your registered packages.
+  +files <files>           Build passed in files and their dependancies
+                           using your registered packages.
+  +packages <directories>  Use unregistered packages residing in the passed
+                           in directories in addition to the registered
+                           packages.
+  -packages <packages>     Don't use passed in packages. This lets you build
+                           components without dependancies.
+  +use-only <packages>     Use only the passed in packages. This lets you
+                           build components without dependancies.
+  -blocks <blocks>         Exclude optional blocks from the sources of the
+                           components you're building.

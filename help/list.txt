@@ -1,0 +1,4 @@
+Usage: packager list
+
+list:
+  Lists your registered packages, as found in ~/.packages.yml.

@@ -1,0 +1,4 @@
+Usage: packager unregister <package>
+
+unregister arguments:
+  <package> Name of the package as specified in its manifest.
