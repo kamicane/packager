@@ -38,7 +38,7 @@ Class Packager {
 				$manifest = YAML::decode_file($manifest_path);
 		}
 		
-		if (empty($manifest)) throw new Exception(basename($manifest_path) . " not found in $package_path, or unable to parse manifest.");
+		if (empty($manifest)) throw new Exception($pathinfo['basename'] . " not found in $package_path, or unable to parse manifest.");
 
 		$package_name = $manifest['name'];
 		
