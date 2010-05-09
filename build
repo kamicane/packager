@@ -6,8 +6,9 @@ $stderr = fopen('php://stderr', 'w');
 require dirname(__FILE__) . '/packager.php';
 
 $executable = array_shift($argv);
+$a0 = !empty($argv[0]) ? $argv[0] : null;
 
-if (!count($argv) || $argv[0] == '-h' || $argv[0] == '--help'){
+if (!count($argv) || $a0 == '-h' || $a0 == '--help'){
 	fwrite($stderr, "Usage: build <package_manifest> [components...]\n");
 	exit(1);
 }
