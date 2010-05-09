@@ -1,5 +1,4 @@
 #!/usr/bin/env php
-
 <?php
 
 $stderr = fopen('php://stderr', 'w');
@@ -7,10 +6,11 @@ $stderr = fopen('php://stderr', 'w');
 require dirname(__FILE__) . '/packager.php';
 
 $executable = array_shift($argv);
+$a0 = !empty($argv[0]) ? $argv[0] : null;
 
-if(!count($argv)){
-	fwrite($stderr, "No arguments given\n");
-	exit;
+if (!count($argv) || $a0 == '-h' || $a0 == '--help'){
+	fwrite($stderr, "Usage: build <package_manifest> [components...]\n");
+	exit(1);
 }
 
 $package = array_shift($argv);
@@ -25,12 +25,10 @@ $files = (empty($argv)) ? $pkg->get_all_files() : $pkg->components_to_files($arg
 
 foreach ($files as $file){
 	$name = $pkg->get_file_name($file);
-	fwrite($stderr, "- $name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+	fwrite($stderr, "- $name: [" . implode(', ', $pkg->get_file_provides($file)) . "]\n");
 }
 
-fwrite($stderr, "\n");
-
-echo $pkg->build_from_components($argv);
+echo (empty($argv)) ? $pkg->build_from_files($files) : $pkg->build_from_components($argv);
 
 fclose($stderr);
 

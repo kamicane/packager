@@ -7,7 +7,7 @@ $executable = array_shift($argv);
 $command = array_shift($argv);
 $a0 = !empty($argv[0]) ? $argv[0] : null;
 
-if ($a0 == '-h' || $a0 == '--help') {
+if ($a0 == '-h' || $a0 == '--help'){
 	usage($command);
 	exit;
 }
@@ -22,7 +22,14 @@ switch ($command){
 	case 'register':
 
 		$folder = array_shift($argv);
-		$pkg = new Packager($folder);
+		$realpath = realpath($folder);
+		
+		if (!$realpath){
+			Packager::warn("file or directory $folder not found\n");
+			exit(1);
+		}
+		
+		$pkg = new Packager($realpath);
 		$name = $pkg->get_package_name();
 		$path = $pkg->get_package_manifest();
 		
@@ -180,7 +187,7 @@ switch ($command){
 	
 }
 
-function usage($command = '') {
+function usage($command = ''){
 	switch ($command){
 		case 'register':
 			echo "Usage: packager register <dir>|<manifest>\n\n";
