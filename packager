@@ -188,8 +188,9 @@ switch ($command){
 }
 
 function usage($command = ''){
-	if (empty($command) || !file_exists("help/$command.txt")) $command = 'default';
-	echo(file_get_contents("help/$command.txt"));
+	$dir = dirname(__FILE__);
+	if (empty($command) || !file_exists("$dir/help/$command.txt")) $command = 'default';
+	echo file_get_contents("$dir/help/$command.txt");
 }
 
 ?>
