@@ -16,29 +16,37 @@ Class Packager {
 	private $root = null;
 	
 	public function __construct($package_paths){
-		foreach ((array)$package_paths as $package_path)
-			$this->parse_manifest($package_path);
+		foreach ((array)$package_paths as $package_path) $this->parse_manifest($package_path);
 	}
 	
-	private function parse_manifest($package_path){
-		if (is_dir($package_path))
-			$package_path .= '/package.yml';
+	private function parse_manifest($path){
+		$pathinfo = pathinfo($path);
+		
+		if (is_dir($path)){
+			
+			$package_path = $pathinfo['dirname'] . '/' . $pathinfo['basename'] . '/';
+			
+			if (file_exists($package_path . 'package.yml')){
+				$manifest_path = $package_path . 'package.yml';
+				$manifest_format = 'yaml';
+			} else if (file_exists($package_path . 'package.yaml')){
+				$manifest_path = $package_path . 'package.yaml';
+				$manifest_format = 'yaml';
+			} else if (file_exists($package_path . 'package.json')){
+				$manifest_path = $package_path . 'package.json';
+				$manifest_format = 'json';
+			}
 
-		$pathinfo = pathinfo($package_path);
-		$package_path = $pathinfo['dirname'] . '/';
-		$manifest_path = $package_path . $pathinfo['basename'];
-		$manifest_format = $pathinfo['extension'];
-
-		switch ($manifest_format){
-			case 'json':
-				$manifest = json_decode(file_get_contents($manifest_path), true);
-			break;
-
-			default:
-				$manifest = YAML::decode_file($manifest_path);
+		} else if (file_exists($path)){
+			$package_path = $pathinfo['dirname'] . '/';
+			$manifest_path = $package_path . $pathinfo['basename'];
+			$manifest_format = $pathinfo['extension'];
 		}
 		
-		if (empty($manifest)) throw new Exception(basename($manifest_path) . " not found in $package_path, or unable to parse manifest.");
+		if ($manifest_format == 'json') $manifest = json_decode(file_get_contents($manifest_path), true);
+		else if ($manifest_format == 'yaml' || $manifest_format == 'yml') $manifest = YAML::decode_file($manifest_path);
+		
+		if (empty($manifest)) throw new Exception("manifest not found in $package_path, or unable to parse manifest.");
 
 		$package_name = $manifest['name'];
 		
