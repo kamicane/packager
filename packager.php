@@ -226,8 +226,12 @@ Class Packager {
 		
 		$source = implode($included_sources, "\n\n");
 		
+		function replacement($matches){
+			return (strpos($matches[2], ($matches[1] == "//") ? "\n" : "*/") === false) ? $matches[2] : "";
+		}
+		
 		foreach ($blocks as $block){
-			$source = preg_replace("%/[/*]\s*<$block>.*?</$block>\s*(?:\*/)?%s", '', $source);
+			$source = preg_replace_callback("%(/[/*])\s*<$block>(.*?)</$block>(?:\s*\*/)?%s", "replacement", $source);
 		}
 		
 		return $source . "\n";
