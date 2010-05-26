@@ -60,7 +60,23 @@ switch ($command){
 	
 	case 'list':
 	
-		foreach ($packages as $name => $path) Packager::warn("$name: $path\n");
+		$package_name = array_shift($argv);
+	
+		if (empty($package_name)){
+			foreach ($packages as $name => $path) Packager::warn("$name: $path\n");
+		} else {
+			if (!empty($packages[$package_name])){
+				$package_path = $packages[$package_name];
+				$pkg = new Packager($package_path);
+				$files = $pkg->get_all_files();
+				foreach ($files as $file){
+					$file_name = $pkg->get_file_name($file);
+					Packager::warn("- $file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+				}
+			} else {
+				Packager::warn("The package $package_name has not been found.\n");
+			}
+		}
 		
 	break;
 	
