@@ -27,7 +27,7 @@ Working with files
 
 ### Getters
 
- * `get_all_files` » gets an ordered list of all files
+ * `get_all_files` » gets an list of all files
  * `get_file_dependancies` » gets an ordered list of every file that this file depends on
  * `get_file_path` » gets the file path
  * `get_file_source` » gets the file source
@@ -51,7 +51,7 @@ Working with components
 ### Converting to files
 
  * `component_to_file` » gets the name of the file that provides this component
- * `components_to_files` » converts a list of components to an ordered list of files
+ * `components_to_files` » converts a list of components to a list of files
 
 ### Generators
 

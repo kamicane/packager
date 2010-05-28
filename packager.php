@@ -251,7 +251,8 @@ Class Packager {
 	}
 
 	public function write_from_components($file_name, $components = null){
-		return $this->write_from_files($file_name, $this->components_to_files($components));
+		$full = $this->build_from_components($components);
+		file_put_contents($file_name, $full);
 	}
 	
 	// # public FILES
@@ -269,7 +270,7 @@ Class Packager {
 	public function get_file_dependancies($file){
 		$hash = $this->file_to_hash($file);
 		if (empty($hash)) return array();
-		return $this->components_to_files($hash['requires']);
+		return $this->complete_files($this->components_to_files($hash['requires']));
 	}
 	
 	public function complete_file($file){
@@ -301,7 +302,7 @@ Class Packager {
 			$file_name = $this->component_to_file($component);
 			if (!empty($file_name) && !in_array($file_name, $files)) $files[] = $file_name;
 		}
-		return $this->complete_files($files);
+		return $files;
 	}
 	
 	// # dynamic getter for PACKAGE properties and FILE properties
