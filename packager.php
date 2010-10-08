@@ -64,7 +64,7 @@ Class Packager {
 			$path = $package_path . $path;
 			
 			// this is where we "hook" for possible other replacers.
-			$source = $this->replace_build($package_path, file_get_contents($path));
+			$source = file_get_contents($path);
 
 			$descriptor = array();
 
@@ -114,16 +114,6 @@ Class Packager {
 		if ($length == 1) return array($default, $exploded[0]);
 		if (empty($exploded[0])) return array($default, $exploded[1]);
 		return array($exploded[0], $exploded[1]);
-	}
-	
-	private function replace_build($package_path, $file){
-		$ref = @file_get_contents($package_path . '.git/HEAD');
-		if (empty($ref)) return $file;
-		
-		preg_match("@ref: ([\w\./-]+)@", $ref, $matches);
-		$ref = file_get_contents($package_path . ".git/" . $matches[1]);
-		preg_match("@([\w\./-]+)@", $ref, $matches);
-		return str_replace("%build%", $matches[1], $file);
 	}
 	
 	// # private HASHES
