@@ -13,6 +13,7 @@ if ($a0 == '-h' || $a0 == '--help'){
 }
 
 $home = exec('echo $HOME');
+if ($home == '$HOME') $home = array_get($_SERVER, 'USERPROFILE');
 
 $packages = YAML::decode_file("$home/.packages.yml");
 if (empty($packages)) $packages = array();
