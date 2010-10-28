@@ -190,7 +190,7 @@ Class Packager {
 	
 	// # public BUILD
 	
-	public function build($files = array(), $components = array(), $packages = array(), $blocks = array()){
+	public function build($files = array(), $components = array(), $packages = array(), $blocks = array(), $excluded = array()){
 
 		if (!empty($components)){
 			$more = $this->components_to_files($components);
@@ -203,6 +203,13 @@ Class Packager {
 		}
 		
 		$files = $this->complete_files($files);
+		
+		if (!empty($excluded)){
+			$less = array();
+			foreach ($this->components_to_files($excluded) as $file) array_include($less, $file);
+			$exclude = $this->complete_files($less);
+			$files = array_diff($files, $exclude);
+		}
 		
 		if (empty($files)) return '';
 		
@@ -226,8 +233,8 @@ Class Packager {
 		return $this->build($files);
 	}
 	
-	public function build_from_components($components){
-		return $this->build(array(), $components);
+	public function build_from_components($components, $excluded = null){
+		return $this->build(array(), $components, array(), array(), $excluded);
 	}
 
 	public function write_from_files($file_name, $files = null){
@@ -235,8 +242,8 @@ Class Packager {
 		file_put_contents($file_name, $full);
 	}
 
-	public function write_from_components($file_name, $components = null){
-		$full = $this->build_from_components($components);
+	public function write_from_components($file_name, $components = null, $exclude = null){
+		$full = $this->build_from_components($components, $exclude);
 		file_put_contents($file_name, $full);
 	}
 	
