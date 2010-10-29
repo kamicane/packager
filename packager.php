@@ -14,7 +14,8 @@ Class Packager {
 	private $packages = array();
 	private $manifests = array();
 	private $root = null;
-	
+	private $files = array();
+
 	public function __construct($package_paths){
 		foreach ((array)$package_paths as $package_path) $this->parse_manifest($package_path);
 	}
@@ -253,9 +254,16 @@ Class Packager {
 	}
 	
 	public function get_file_dependancies($file){
+		$deps = array();
 		$hash = $this->file_to_hash($file);
 		if (empty($hash)) return array();
-		return $this->complete_files($this->components_to_files($hash['requires']));
+		if (!in_array($file, $this->files)) {
+			$this->files[] = $file;
+			$files = $this->components_to_files($hash['requires']);
+			$files = array_diff($files, $this->files);
+			$deps = $this->complete_files($files);
+		}
+		return $deps;
 	}
 	
 	public function complete_file($file){
