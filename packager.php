@@ -3,7 +3,22 @@
 require dirname(__FILE__) . "/helpers/yaml.php";
 require dirname(__FILE__) . "/helpers/array.php";
 
-Class Packager {
+function bfglob($path, $pattern = '*', $flags = 0, $depth = 0) {
+	$matches = array();
+	$folders = array(rtrim($path, DIRECTORY_SEPARATOR));
+     
+	while($folder = array_shift($folders)) {
+	$matches = array_merge($matches, glob($folder.DIRECTORY_SEPARATOR.$pattern, $flags));
+		if($depth != 0) {
+			$moreFolders = glob($folder.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR);
+			$depth   = ($depth < -1) ? -1: $depth + count($moreFolders) - 2;
+			$folders = array_merge($folders, $moreFolders);
+		}
+	}
+	return $matches;
+}
+
+class Packager {
 	
 	public static function warn($message){
 		$std_err = fopen('php://stderr', 'w');
@@ -58,37 +73,35 @@ Class Packager {
 		$manifest['manifest'] = $manifest_path;
 		
 		$this->manifests[$package_name] = $manifest;
-		
+
+		if(!is_array($manifest['sources'])){
+			$manifest['sources'] = bfglob($package_path, $manifest['sources'], 0, 5);
+			$patternUsed = true;
+ 		}
 		foreach ($manifest['sources'] as $i => $path){
-			
-			$path = $package_path . $path;
-			
+		
+			if(!isset($patternUsed)) $path = $package_path . $path;
+		
 			// this is where we "hook" for possible other replacers.
 			$source = $this->replace_build($package_path, file_get_contents($path));
-
 			$descriptor = array();
-
 			// get contents of first comment
 			preg_match('/\s*\/\*\s*(.*?)\s*\*\//s', $source, $matches);
-
 			if (!empty($matches)){
 				// get contents of YAML front matter
 				preg_match('/^-{3}\s*$(.*?)^(?:-{3}|\.{3})\s*$/ms', $matches[1], $matches);
-
 				if (!empty($matches)) $descriptor = YAML::decode($matches[1]);
 			}
-
 			// populate / convert to array requires and provides
 			$requires = (array)(!empty($descriptor['requires']) ? $descriptor['requires'] : array());
 			$provides = (array)(!empty($descriptor['provides']) ? $descriptor['provides'] : array());
 			$file_name = !empty($descriptor['name']) ? $descriptor['name'] : basename($path, '.js');
-
 			// "normalization" for requires. Fills up the default package name from requires, if not present.
 			foreach ($requires as $i => $require)
 				$requires[$i] = implode('/', $this->parse_name($package_name, $require));
-			
+		
 			$license = array_get($descriptor, 'license');
-			
+		
 			$this->packages[$package_name][$file_name] = array_merge($descriptor, array(
 				'package' => $package_name,
 				'requires' => $requires,
@@ -98,8 +111,8 @@ Class Packager {
 				'package/name' => $package_name . '/' . $file_name,
 				'license' => empty($license) ? array_get($manifest, 'license') : $license
 			));
-
 		}
+
 	}
 	
 	public function add_package($package_path){
