@@ -137,8 +137,8 @@ switch ($command){
 		
 		$pkg = new Packager($paths);
 		
-		foreach ($selected['add-packages'] as $package_path) $pkg->add_package($package_path);
 		foreach ($selected['remove-packages'] as $package_name) $pkg->remove_package($package_name);
+		foreach ($selected['add-packages'] as $package_path) $pkg->add_package($package_path);
 		
 		$re = "/^([^\/]+)\/\*$/";
 		$wildcards = array();

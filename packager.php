@@ -81,27 +81,28 @@ class Packager {
 		foreach ($manifest['sources'] as $i => $path){
 		
 			if(!isset($patternUsed)) $path = $package_path . $path;
-		
+			
 			// this is where we "hook" for possible other replacers.
-			$source = $this->replace_build($package_path, file_get_contents($path));
+			$source = file_get_contents($path);
+
 			$descriptor = array();
+
 			// get contents of first comment
-			preg_match('/\s*\/\*\s*(.*?)\s*\*\//s', $source, $matches);
-			if (!empty($matches)){
-				// get contents of YAML front matter
-				preg_match('/^-{3}\s*$(.*?)^(?:-{3}|\.{3})\s*$/ms', $matches[1], $matches);
-				if (!empty($matches)) $descriptor = YAML::decode($matches[1]);
-			}
+			preg_match('/\/\*\s*^---(.*?)^\.\.\.\s*\*\//ms', $source, $matches);
+
+			if (!empty($matches)) $descriptor = YAML::decode($matches[0]);
+
 			// populate / convert to array requires and provides
 			$requires = (array)(!empty($descriptor['requires']) ? $descriptor['requires'] : array());
 			$provides = (array)(!empty($descriptor['provides']) ? $descriptor['provides'] : array());
 			$file_name = !empty($descriptor['name']) ? $descriptor['name'] : basename($path, '.js');
+
 			// "normalization" for requires. Fills up the default package name from requires, if not present.
 			foreach ($requires as $i => $require)
 				$requires[$i] = implode('/', $this->parse_name($package_name, $require));
-		
+			
 			$license = array_get($descriptor, 'license');
-		
+			
 			$this->packages[$package_name][$file_name] = array_merge($descriptor, array(
 				'package' => $package_name,
 				'requires' => $requires,
@@ -111,6 +112,7 @@ class Packager {
 				'package/name' => $package_name . '/' . $file_name,
 				'license' => empty($license) ? array_get($manifest, 'license') : $license
 			));
+
 		}
 
 	}
@@ -132,16 +134,6 @@ class Packager {
 		if ($length == 1) return array($default, $exploded[0]);
 		if (empty($exploded[0])) return array($default, $exploded[1]);
 		return array($exploded[0], $exploded[1]);
-	}
-	
-	private function replace_build($package_path, $file){
-		$ref = @file_get_contents($package_path . '.git/HEAD');
-		if (empty($ref)) return $file;
-		
-		preg_match("@ref: ([\w\.-/]+)@", $ref, $matches);
-		$ref = file_get_contents($package_path . ".git/" . $matches[1]);
-		preg_match("@([\w\.-/]+)@", $ref, $matches);
-		return str_replace("%build%", $matches[1], $file);
 	}
 	
 	// # private HASHES
