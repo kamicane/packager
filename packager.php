@@ -3,21 +3,6 @@
 require dirname(__FILE__) . "/helpers/yaml.php";
 require dirname(__FILE__) . "/helpers/array.php";
 
-function bfglob($path, $pattern = '*', $flags = 0, $depth = 0) {
-	$matches = array();
-	$folders = array(rtrim($path, DIRECTORY_SEPARATOR));
-     
-	while($folder = array_shift($folders)) {
-	$matches = array_merge($matches, glob($folder.DIRECTORY_SEPARATOR.$pattern, $flags));
-		if($depth != 0) {
-			$moreFolders = glob($folder.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR);
-			$depth   = ($depth < -1) ? -1: $depth + count($moreFolders) - 2;
-			$folders = array_merge($folders, $moreFolders);
-		}
-	}
-	return $matches;
-}
-
 class Packager {
 	
 	public static function warn($message){
@@ -75,7 +60,7 @@ class Packager {
 		$this->manifests[$package_name] = $manifest;
 
 		if(!is_array($manifest['sources'])){
-			$manifest['sources'] = bfglob($package_path, $manifest['sources'], 0, 5);
+			$manifest['sources'] = $this->bfglob($package_path, $manifest['sources'], 0, 5);
 			$patternUsed = true;
  		}
 		foreach ($manifest['sources'] as $i => $path){
@@ -134,6 +119,21 @@ class Packager {
 		if ($length == 1) return array($default, $exploded[0]);
 		if (empty($exploded[0])) return array($default, $exploded[1]);
 		return array($exploded[0], $exploded[1]);
+	}
+
+	private	function bfglob($path, $pattern = '*', $flags = 0, $depth = 0) {
+		$matches = array();
+		$folders = array(rtrim($path, DIRECTORY_SEPARATOR));
+	     
+		while($folder = array_shift($folders)) {
+		$matches = array_merge($matches, glob($folder.DIRECTORY_SEPARATOR.$pattern, $flags));
+			if($depth != 0) {
+				$moreFolders = glob($folder.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR);
+				$depth   = ($depth < -1) ? -1: $depth + count($moreFolders) - 2;
+				$folders = array_merge($folders, $moreFolders);
+			}
+		}
+		return $matches;
 	}
 	
 	// # private HASHES
