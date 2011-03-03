@@ -165,20 +165,9 @@ switch ($command){
 		
 		$pkg->validate($files, $components, $wildcards);
 		
-		foreach ($components as $component){
-			$file = $pkg->component_to_file($component);
-			if ($file) array_include($files, $file);
-		}
-		
-		foreach ($wildcards as $package){
-			$all = $pkg->get_all_files($package);
-			foreach ($all as $file) array_include($files, $file);
-		}
-		
-		$files = $pkg->complete_files($files);
+		$files = $pkg->resolve_files($files, $components, $wildcards);
 		
 		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
-		
 		Packager::warn("Included Files/Components:\n");
 		
 		foreach ($files as $file){

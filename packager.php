@@ -189,10 +189,7 @@ Class Packager {
 		}
 	}
 	
-	// # public BUILD
-	
-	public function build($files = array(), $components = array(), $packages = array(), $blocks = array()){
-
+	public function resolve_files($files = array(), $components = array(), $packages = array()){
 		if (!empty($components)){
 			$more = $this->components_to_files($components);
 			foreach ($more as $file) array_include($files, $file);
@@ -200,23 +197,31 @@ Class Packager {
 		
 		foreach ($packages as $package){
 			$more = $this->get_all_files($package);
-			foreach ($more as $file) array_include($files, $file);	
+			foreach ($more as $file) array_include($files, $file);
 		}
 		
-		$files = $this->complete_files($files);
-		
+		return $this->complete_files($files);
+	}
+	
+	// # public BUILD
+	
+	public function build($files = array(), $components = array(), $packages = array(), $blocks = array()){
+
+		$files = $this->resolve_files($files, $components, $packages);
 		if (empty($files)) return '';
 		
 		$included_sources = array();
 		foreach ($files as $file) $included_sources[] = $this->get_file_source($file);
 		
-		$source = implode($included_sources, "\n\n");
-		
+		return $this->remove_blocks(implode($included_sources, "\n\n"), $blocks) . "\n";
+	}
+	
+	public function remove_blocks($source, $blocks){
 		foreach ($blocks as $block){
 			$source = preg_replace_callback("%(/[/*])\s*<$block>(.*?)</$block>(?:\s*\*/)?%s", array($this, "block_replacement"), $source);
 		}
 		
-		return $source . "\n";
+		return $source;
 	}
 	
 	private function block_replacement($matches){
