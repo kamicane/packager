@@ -85,6 +85,7 @@ Class Packager {
 			$license = array_get($descriptor, 'license');
 			
 			$this->packages[$package_name][$file_name] = array_merge($descriptor, array(
+				'name' => $file_name,
 				'package' => $package_name,
 				'requires' => $requires,
 				'provides' => $provides,
