@@ -69,7 +69,7 @@ Class Packager {
 			$descriptor = array();
 
 			// get contents of first comment
-			preg_match('/\/\*\s*^---(.*?)^\.\.\.\s*\*\//ms', $source, $matches);
+			preg_match('/\/\*\s*^---(.*?)^(?:\.\.\.|---)\s*\*\//ms', $source, $matches);
 
 			if (!empty($matches)) $descriptor = YAML::decode($matches[0]);
 
