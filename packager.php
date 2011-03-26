@@ -62,6 +62,11 @@ Class Packager {
 		
 		foreach ($manifest['sources'] as $i => $path){
 			
+			// thomasd: if the source-node contains a description we cache it, but we wait if there's also a description-header in the file as this one takes precedence
+			if(is_array($path)){
+				$source_desc = $path[1];
+				$path = $path[0];
+			}
 			$path = $package_path . $path;
 			
 			// this is where we "hook" for possible other replacers.
@@ -72,7 +77,13 @@ Class Packager {
 			// get contents of first comment
 			preg_match('/\/\*\s*^---(.*?)^\.\.\.\s*\*\//ms', $source, $matches);
 
-			if (!empty($matches)) $descriptor = YAML::decode($matches[0]);
+			if (!empty($matches)){
+				$descriptor = YAML::decode($matches[0]);
+			}
+			// thomasd: if the file doesn't contain a proper description-header but the manifest does, we take that description 
+			else if(isset($source_desc) && is_array($source_desc)){
+				$descriptor = $source_desc;
+			}
 
 			// populate / convert to array requires and provides
 			$requires = (array)(!empty($descriptor['requires']) ? $descriptor['requires'] : array());
