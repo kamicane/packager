@@ -26,7 +26,7 @@ Class Packager {
 		if (is_dir($path)){
 			
 			$package_path = $pathinfo['dirname'] . '/' . $pathinfo['basename'] . '/';
-			
+
 			if (file_exists($package_path . 'package.yml')){
 				$manifest_path = $package_path . 'package.yml';
 				$manifest_format = 'yaml';
@@ -43,14 +43,14 @@ Class Packager {
 			$manifest_path = $package_path . $pathinfo['basename'];
 			$manifest_format = $pathinfo['extension'];
 		}
-		
+
 		if ($manifest_format == 'json') $manifest = json_decode(file_get_contents($manifest_path), true);
 		else if ($manifest_format == 'yaml' || $manifest_format == 'yml') $manifest = YAML::decode_file($manifest_path);
-		
+
 		if (empty($manifest)) throw new Exception("manifest not found in $package_path, or unable to parse manifest.");
 
 		$package_name = $manifest['name'];
-		
+
 		if ($this->root == null) $this->root = $package_name;
 
 		if (array_has($this->manifests, $package_name)) return;
@@ -252,10 +252,17 @@ Class Packager {
 		}
 		return $files;
 	}
-	
+
 	public function get_file_dependancies($file){
+		$this->files = array();
+		$deps = $this->parse_file_dependancies($file);
+		return $deps;
+	}
+
+	private function parse_file_dependancies($file){
 		$deps = array();
 		$hash = $this->file_to_hash($file);
+
 		if (empty($hash)) return array();
 		if (!in_array($file, $this->files)) {
 			$this->files[] = $file;
@@ -265,9 +272,9 @@ Class Packager {
 		}
 		return $deps;
 	}
-	
+
 	public function complete_file($file){
-		$files = $this->get_file_dependancies($file);
+		$files = $this->parse_file_dependancies($file);
 		$hash = $this->file_to_hash($file);
 		if (empty($hash)) return array();
 		array_include($files, $hash['package/name']);
@@ -318,7 +325,7 @@ Class Packager {
 		
 		return null;
 	}
-	
+
 	public function get_packages(){
 		return array_keys($this->packages);
 	}
