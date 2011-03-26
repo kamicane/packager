@@ -3,7 +3,7 @@
 require dirname(__FILE__) . "/helpers/yaml.php";
 require dirname(__FILE__) . "/helpers/array.php";
 
-Class Packager {
+class Packager {
 	
 	public static function warn($message){
 		$std_err = fopen('php://stderr', 'w');
@@ -26,7 +26,6 @@ Class Packager {
 		if (is_dir($path)){
 			
 			$package_path = $pathinfo['dirname'] . '/' . $pathinfo['basename'] . '/';
-
 			if (file_exists($package_path . 'package.yml')){
 				$manifest_path = $package_path . 'package.yml';
 				$manifest_format = 'yaml';
@@ -59,8 +58,14 @@ Class Packager {
 		$manifest['manifest'] = $manifest_path;
 		
 		$this->manifests[$package_name] = $manifest;
-		
+
+		if(!is_array($manifest['sources'])){
+			$manifest['sources'] = $this->bfglob($package_path, $manifest['sources'], 0, 5);
+			$patternUsed = true;
+ 		}
 		foreach ($manifest['sources'] as $i => $path){
+		
+			if(!isset($patternUsed)) $path = $package_path . $path;
 			
 			// thomasd: if the source-node contains a description we cache it, but we wait if there's also a description-header in the file as this one takes precedence
 			if(is_array($path)){
@@ -107,6 +112,7 @@ Class Packager {
 			));
 
 		}
+
 	}
 	
 	public function add_package($package_path){
@@ -126,6 +132,21 @@ Class Packager {
 		if ($length == 1) return array($default, $exploded[0]);
 		if (empty($exploded[0])) return array($default, $exploded[1]);
 		return array($exploded[0], $exploded[1]);
+	}
+
+	private	function bfglob($path, $pattern = '*', $flags = 0, $depth = 0) {
+		$matches = array();
+		$folders = array(rtrim($path, DIRECTORY_SEPARATOR));
+	     
+		while($folder = array_shift($folders)) {
+		$matches = array_merge($matches, glob($folder.DIRECTORY_SEPARATOR.$pattern, $flags));
+			if($depth != 0) {
+				$moreFolders = glob($folder.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR);
+				$depth   = ($depth < -1) ? -1: $depth + count($moreFolders) - 2;
+				$folders = array_merge($folders, $moreFolders);
+			}
+		}
+		return $matches;
 	}
 	
 	// # private HASHES
