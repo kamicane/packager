@@ -65,8 +65,7 @@ class Packager {
  		}
 		foreach ($manifest['sources'] as $i => $path){
 
-
-			if(!isset($patternUsed)) $path = $package_path . $path;
+			if (!empty($patternUsed)) $path = $package_path . $path;
 
 			// thomasd: if the source-node contains a description we cache it, but we wait if there's also a description-header in the file as this one takes precedence
 			if(is_array($path)){
