@@ -64,9 +64,10 @@ class Packager {
 			$patternUsed = true;
  		}
 		foreach ($manifest['sources'] as $i => $path){
-		
+
+
 			if(!isset($patternUsed)) $path = $package_path . $path;
-			
+
 			// thomasd: if the source-node contains a description we cache it, but we wait if there's also a description-header in the file as this one takes precedence
 			if(is_array($path)){
 				$source_desc = $path[1];
@@ -80,7 +81,7 @@ class Packager {
 			$descriptor = array();
 
 			// get contents of first comment
-			preg_match('/\/\*\s*^---(.*?)^\.\.\.\s*\*\//ms', $source, $matches);
+			preg_match('/\/\*\s*^---(.*?)^(?:\.\.\.|---)\s*\*\//ms', $source, $matches);
 
 			if (!empty($matches)){
 				$descriptor = YAML::decode($matches[0]);
@@ -102,6 +103,7 @@ class Packager {
 			$license = array_get($descriptor, 'license');
 			
 			$this->packages[$package_name][$file_name] = array_merge($descriptor, array(
+				'name' => $file_name,
 				'package' => $package_name,
 				'requires' => $requires,
 				'provides' => $provides,
@@ -220,11 +222,8 @@ class Packager {
 			if (!$this->package_exists($package)) self::warn("WARNING: The required package $package could not be found.\n");
 		}
 	}
-	
-	// # public BUILD
-	
-	public function build($files = array(), $components = array(), $packages = array(), $blocks = array(), $excluded = array()){
 
+	public function resolve_files($files = array(), $components = array(), $packages = array(), $blocks = array(), $excluded = array()){
 		if (!empty($components)){
 			$more = $this->components_to_files($components);
 			foreach ($more as $file) array_include($files, $file);
@@ -243,6 +242,13 @@ class Packager {
 			$exclude = $this->complete_files($less);
 			$files = array_diff($files, $exclude);
 		}
+		return $files;
+	}
+
+	// # public BUILD
+	public function build($files = array(), $components = array(), $packages = array(), $blocks = array(), $excluded = array()){
+
+		$files = $this->resolve_files($files, $components, $packages, $blocks, $excluded);
 		
 		if (empty($files)) return '';
 		
@@ -251,13 +257,16 @@ class Packager {
 		
 		$source = implode($included_sources, "\n\n");
 		
+		return $this->remove_blocks($source, $blocks) . "\n";
+	}
+
+	public function remove_blocks($source, $blocks){
 		foreach ($blocks as $block){
 			$source = preg_replace_callback("%(/[/*])\s*<$block>(.*?)</$block>(?:\s*\*/)?%s", array($this, "block_replacement"), $source);
 		}
-		
-		return $source . "\n";
+		return $source;
 	}
-	
+
 	private function block_replacement($matches){
 		return (strpos($matches[2], ($matches[1] == "//") ? "\n" : "*/") === false) ? $matches[2] : "";
 	}
