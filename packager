@@ -37,8 +37,8 @@ switch ($command){
 		$packages[$name] = $path;
 		
 		file_put_contents("$home/.packages.yml", YAML::encode($packages));
-		
-		Packager::warn("the package $name has been registered as $path\n");
+
+		Packager::info("the package $name has been registered as $path\n");
 
 	break;
 	
@@ -55,7 +55,7 @@ switch ($command){
 	
 		file_put_contents("$home/.packages.yml", YAML::encode($packages));
 	
-		Packager::warn("the package $name has been unregistered\n");
+		Packager::info("the package $name has been unregistered\n");
 	
 	break;
 	
@@ -64,7 +64,7 @@ switch ($command){
 		$package_name = array_shift($argv);
 	
 		if (empty($package_name)){
-			foreach ($packages as $name => $path) Packager::warn("$name: $path\n");
+			foreach ($packages as $name => $path) Packager::info("$name: $path\n");
 		} else {
 			if (!empty($packages[$package_name])){
 				$package_path = $packages[$package_name];
@@ -72,7 +72,7 @@ switch ($command){
 				$files = $pkg->get_all_files();
 				foreach ($files as $file){
 					$file_name = $pkg->get_file_name($file);
-					Packager::warn("- $file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+					Packager::info("- $file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
 				}
 			} else {
 				Packager::warn("The package $package_name has not been found.\n");
@@ -168,13 +168,13 @@ switch ($command){
 		
 		$files = $pkg->resolve_files($files, $components, $wildcards);
 		
-		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
-		Packager::warn("Included Files/Components:\n");
+		Packager::info("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
+		Packager::info("Included Files/Components:\n");
 		
 		foreach ($files as $file){
 			$file_name = $pkg->get_file_name($file);
 			$file_package = $pkg->get_file_package($file);
-			Packager::warn("- $file_package/$file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+			Packager::info("- $file_package/$file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
 		}
 		
 		echo $pkg->build($files, array(), array(), $blocks);

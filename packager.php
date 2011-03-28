@@ -11,6 +11,12 @@ class Packager {
 		fclose($std_err);
 	}
 
+	public static function info($message){
+		$std_out = fopen('php://stdout', 'w');
+		fwrite($std_out, $message);
+		fclose($std_out);
+	}
+
 	private $packages = array();
 	private $manifests = array();
 	private $root = null;
