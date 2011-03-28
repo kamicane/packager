@@ -167,14 +167,14 @@ switch ($command){
 		$pkg->validate($files, $components, $wildcards);
 		
 		$files = $pkg->resolve_files($files, $components, $wildcards);
-		
-		Packager::info("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
-		Packager::info("Included Files/Components:\n");
+
+		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
+		Packager::warn("Included Files/Components:\n");
 		
 		foreach ($files as $file){
 			$file_name = $pkg->get_file_name($file);
 			$file_package = $pkg->get_file_package($file);
-			Packager::info("- $file_package/$file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+			Packager::warn("- $file_package/$file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
 		}
 		
 		echo $pkg->build($files, array(), array(), $blocks);
