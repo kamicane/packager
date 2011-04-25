@@ -20,7 +20,8 @@ class Package
 		$this->name = $this->manifest['name'];
 		
 		foreach ($this->manifest['sources'] as $i => $source_path) {
-			$descriptor = $this->get_descriptor($this->root_dir . '/' . $source_path);
+			$source_path = $this->root_dir . '/' . $source_path;
+			$descriptor = $this->get_descriptor($source_path);
 			$this->sources[$descriptor['name']] = array_merge($descriptor, array(
 				'package' => $this->name,
 				'path' => $source_path,

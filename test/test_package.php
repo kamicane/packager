@@ -36,4 +36,20 @@ class PackageTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('Core/Type', $descriptor['requires'][0]);
 		$this->assertEquals('Core/Array', $descriptor['package/name']);
 	}
+	
+	/**
+	 * @depends test_constructor
+	 */
+	public function test_get_source_with_file($package)
+	{
+		$descriptor = $package->get_source_with_file('Class');
+		
+		$this->assertEquals('Class', $descriptor['name']);
+		
+		$this->assertEquals(1, count($descriptor['requires']));
+		$this->assertEquals('Core/Array', $descriptor['requires'][0]);
+		
+		$this->assertEquals(1, count($descriptor['provides']));
+		$this->assertEquals('Class', $descriptor['provides'][0]);
+	}
 }
