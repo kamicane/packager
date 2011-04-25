@@ -99,7 +99,7 @@ class Package
 	public function get_source_with_component($component)
 	{
 		foreach ($this->sources as $source){
-			if (array_contains($component, $source['provides'])) return $source;
+			if (array_contains($source['provides'], $component)) return $source;
 		}
 		return null;
 	}
@@ -154,7 +154,7 @@ class Package
 	
 	protected function normalize_requires($require)
 	{
-		return implode('/', self::parse_name($package_name, $require));
+		return implode('/', self::parse_name($this->name, $require));
 	}
 }
 
@@ -183,7 +183,7 @@ class Packager {
 	}
 	
 	public function add_package($package_path){		
-		$package = new Package($this, $package_path);
+		$package = ($package_path instanceof Package) ? $package_path : new Package($this, $package_path);
 		$name = $package->get_name();
 		if (!$this->root) $this->root = $name;
 		if (array_has($this->manifests, $name)) continue;

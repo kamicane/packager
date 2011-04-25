@@ -4,14 +4,14 @@ require_once dirname(__FILE__) . '/../packager.php';
 
 class PackagerTest extends PHPUnit_Framework_TestCase
 {
-	public function testConstructor()
+	public function test_constructor()
 	{
 		new Packager(array());
 		return new Packager(dirname(__FILE__) . '/fixtures/package.yml');
 	}
 	
 	/**
-	 * @depends testConstructor
+	 * @depends test_constructor
 	 */
 	public function test_get_all_files($packager)
 	{
@@ -20,16 +20,30 @@ class PackagerTest extends PHPUnit_Framework_TestCase
 	}
 	
 	/**
-	 * @depends testConstructor
+	 * @depends test_constructor
 	 */
 	public function test_get_packages($packager)
 	{
 		$packages = $packager->get_packages();
 		$this->assertEquals('Core', $packages[0]);
 	}
-}
-
-class PackageTest extends PHPUnit_Framework_TestCase
-{
+	
+	/**
+	 * @depends test_constructor
+	 */
+	public function test_resolve_files($packager)
+	{
+		$files = $packager->resolve_files();
+		var_dump($files);
+	}
+	
+	/**
+	 * @depends test_constructor
+	 */
+	public function test_build($packager)
+	{
+		$build = $packager->build();
+		var_dump($build);
+	}
 }
 
