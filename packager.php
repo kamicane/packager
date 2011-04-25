@@ -8,8 +8,9 @@ class Package
 	const DESCRIPTOR_REGEX = '/\/\*\s*^---(.*?)^(?:\.\.\.|---)\s*\*\//ms';
 	protected $sources = array();
 	
-	public function __construct($path)
+	public function __construct(Packager $manager, $path)
 	{	
+		$this->manager = $manager;
 		$this->path = $this->resolve_path($path);
 		$this->root_dir = dirname($this->path);
 
@@ -20,7 +21,7 @@ class Package
 		
 		foreach ($this->manifest['sources'] as $i => $source_path) {
 			$descriptor = $this->get_descriptor($source_path);
-			$this->sources[] = array_merge($descriptor, array(
+			$this->sources[$descriptor['name']] = array_merge($descriptor, array(
 				'package' => $this->name,
 				'path' => $source_path,
 				'package/name' => sprintf('%s/%s', $this->name, $descriptor['name'])
@@ -49,9 +50,13 @@ class Package
 		return $matches;
 	}
 	
-	public function get_manifest()
+	static function parse_name($default, $name)
 	{
-		return $this->manifest;
+		$exploded = explode('/', $name);
+		$length = count($exploded);
+		if ($length == 1) return array($default, $exploded[0]);
+		if (empty($exploded[0])) return array($default, $exploded[1]);
+		return array($exploded[0], $exploded[1]);
 	}
 	
 	public function get_descriptor($source_path)
@@ -66,10 +71,10 @@ class Package
 		if (!isset($descriptor['name'])) $descriptor['name'] = basename($source_path, '.js');
 		if (!isset($descriptorp['license'])) $descriptor['license'] = array_get($this->manifest, 'license');
 		$descriptor['source'] = $source;
-		$descriptor['requires'] = $requires = (array) array_get($descriptor, 'requires');
 		$descriptor['provides'] = (array) array_get($descriptor, 'provides');
 		
-		array_map($requires, array($this, 'normalize_requires'));
+		$requires = (array) array_get($descriptor, 'requires');
+		$descriptor['requires'] = array_map($requires, array($this, 'normalize_requires'));
 		
 		return $descriptor;
 	}
@@ -81,9 +86,27 @@ class Package
 		return $files;
 	}
 	
+	public function get_manifest()
+	{
+		return $this->manifest;
+	}
+	
 	public function get_name()
 	{
 		return $this->name;
+	}
+	
+	public function get_source_with_component($component)
+	{
+		foreach ($this->sources as $source){
+			if (array_contains($component, $source['provides'])) return $source;
+		}
+		return null;
+	}
+	
+	public function get_source_with_file($name)
+	{
+		return array_get($this->sources, $name);
 	}
 	
 	public function get_root_dir()
@@ -105,6 +128,20 @@ class Package
 		throw new Exception("package.(yml|yaml|json) not found in $path.");
 	}
 	
+	# todo(ibolmo): Consider passing a callback function `onError` rather than passing Packager instance in constructor.
+	public function validate()
+	{		
+		foreach ($this->sources as $descriptor){
+			$file_requires = $descriptor['requires'];
+			foreach ($file_requires as $component){
+				if (!$this->manager->component_exists($component)){
+					# todo(ibolmo): Pass, or create, a logger in constructor rather than depend on Packager
+					Packager::warn("WARNING: The component $component, required in the file " . $file['package/name'] . ", has not been provided.\n");
+				}
+			}
+		}
+	}
+	
 	protected function normalize_manifest()
 	{
 		$manifest = $this->manifest;
@@ -117,15 +154,7 @@ class Package
 	
 	protected function normalize_requires($require)
 	{
-		return implode('/', $this->parse_name($package_name, $require));
-	}
-	
-	protected function parse_name($default, $name){
-		$exploded = explode('/', $name);
-		$length = count($exploded);
-		if ($length == 1) return array($default, $exploded[0]);
-		if (empty($exploded[0])) return array($default, $exploded[1]);
-		return array($exploded[0], $exploded[1]);
+		return implode('/', self::parse_name($package_name, $require));
 	}
 }
 
@@ -150,18 +179,16 @@ class Packager {
 	private $files = array();
 
 	public function __construct($package_paths){
-		foreach ((array) $package_paths as $package_path){
-			$package = new Package($package_path);
-			$name = $package->get_name();
-			if (!$this->root) $this->root = $name;
-			if (array_has($this->manifests, $name)) continue;
-			$this->packages[$name] = $package;
-			$this->manifests[$name] = $package->get_manifest();
-		}
+		foreach ((array) $package_paths as $package_path) $this->add_package($package_path);
 	}
 	
-	public function add_package($package_path){
-		$this->parse_manifest($package_path);
+	public function add_package($package_path){		
+		$package = new Package($this, $package_path);
+		$name = $package->get_name();
+		if (!$this->root) $this->root = $name;
+		if (array_has($this->manifests, $name)) continue;
+		$this->packages[$name] = $package;
+		$this->manifests[$name] = $package->get_manifest();
 	}
 	
 	public function remove_package($package_name){
@@ -172,35 +199,15 @@ class Packager {
 	// # private HASHES
 	
 	private function component_to_hash($name){
-		$pair = $this->parse_name($this->root, $name);
-		$package = array_get($this->packages, $pair[0]);
-
-		if (!empty($package)){
-			$component = $pair[1];
-
-			foreach ($package as $file => $data){
-				foreach ($data['provides'] as $c){
-					if ($c == $component) return $data;
-				}
-			}
-		}
-		
-		return null;
+		list($name, $component) = Package::parse_name($this->root, $name);
+		$package = array_get($this->packages, $name);
+		return !$package ? null : $package->get_source_with_component($component);
 	}
 	
 	private function file_to_hash($name){
-		$pair = $this->parse_name($this->root, $name);
-		$package = array_get($this->packages, $pair[0]);
-
-		if (!empty($package)){
-			$file_name = $pair[1];
-
-			foreach ($package as $file => $data){
-				if ($file == $file_name) return $data;
-			}
-		}
-		
-		return null;
+		list($name, $file) = Package::parse_name($this->root, $name);
+		$package = array_get($this->packages, $name);
+		return !$package ? null : $package->get_source_with_file($file);
 	}
 	
 	public function file_exists($name){
@@ -217,16 +224,7 @@ class Packager {
 	
 	public function validate($more_files = array(), $more_components = array(), $more_packages = array()){
 
-		foreach ($this->packages as $name => $files){
-			foreach ($files as $file){
-				$file_requires = $file['requires'];
-				foreach ($file_requires as $component){
-					if (!$this->component_exists($component)){
-						self::warn("WARNING: The component $component, required in the file " . $file['package/name'] . ", has not been provided.\n");
-					}
-				}
-			}
-		}
+		foreach ($this->packages as $name => $package) $package->validate();
 		
 		foreach ($more_files as $file){
 			if (!$this->file_exists($file)) self::warn("WARNING: The required file $file could not be found.\n");
@@ -411,10 +409,8 @@ class Packager {
 	
 	private function normalize_authors($authors = null, $author = null, $default = null){
 		$use = empty($authors) ? $author : $authors;
-		if (empty($use) && !empty($default)) return $default;
-		if (is_array($use)) return $use;
-		if (empty($use)) return array();
-		return array($use);
+		if (empty($use)) $use = $default;
+		return (array) $use;
 	}
 	
 }
