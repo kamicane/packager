@@ -3,6 +3,133 @@
 require dirname(__FILE__) . "/helpers/yaml.php";
 require dirname(__FILE__) . "/helpers/array.php";
 
+class Package
+{
+	const DESCRIPTOR_REGEX = '/\/\*\s*^---(.*?)^(?:\.\.\.|---)\s*\*\//ms';
+	protected $sources = array();
+	
+	public function __construct($path)
+	{	
+		$this->path = $this->resolve_path($path);
+		$this->root_dir = dirname($this->path);
+
+		$this->manifest = self::decode($this->path);
+		$this->normalize_manifest();
+
+		$this->name = $this->manifest['name'];
+		
+		foreach ($this->manifest['sources'] as $i => $source_path) {
+			$descriptor = $this->get_descriptor($source_path);
+			$this->sources[] = array_merge($descriptor, array(
+				'package' => $this->name,
+				'path' => $source_path,
+				'package/name' => sprintf('%s/%s', $this->name, $descriptor['name'])
+			));
+		}
+	}
+	
+	static function decode($path)
+	{
+		return preg_match('/\.json$/', $path) ? json_decode(file_get_contents($path), true) : YAML::decode_file($path);
+	}
+	
+	static function glob($path, $pattern = '*', $flags = 0, $depth = 0)
+	{
+		$matches = array();
+		$folders = array(rtrim($path, DIRECTORY_SEPARATOR));
+	     
+		while ($folder = array_shift($folders)){
+			$matches = array_merge($matches, glob($folder.DIRECTORY_SEPARATOR.$pattern, $flags));
+			if ($depth != 0) {
+				$moreFolders = glob($folder.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR);
+				$depth = ($depth < -1) ? -1: $depth + count($moreFolders) - 2;
+				$folders = array_merge($folders, $moreFolders);
+			}
+		}
+		return $matches;
+	}
+	
+	public function get_manifest()
+	{
+		return $this->manifest;
+	}
+	
+	public function get_descriptor($source_path)
+	{
+		$source = file_get_contents($source_path);
+		
+		preg_match(self::DESCRIPTOR_REGEX, $source, $matches);
+		if (empty($matches)) return array();
+		
+		$descriptor = YAML::decode($matches[0]);
+
+		if (!isset($descriptor['name'])) $descriptor['name'] = basename($source_path, '.js');
+		if (!isset($descriptorp['license'])) $descriptor['license'] = array_get($this->manifest, 'license');
+		$descriptor['source'] = $source;
+		$descriptor['requires'] = $requires = (array) array_get($descriptor, 'requires');
+		$descriptor['provides'] = (array) array_get($descriptor, 'provides');
+		
+		array_map($requires, array($this, 'normalize_requires'));
+		
+		return $descriptor;
+	}
+	
+	public function get_files()
+	{
+		$files = array();
+		foreach ($this->sources as $descriptor) $files[] = $descriptor['package/name'];
+		return $files;
+	}
+	
+	public function get_name()
+	{
+		return $this->name;
+	}
+	
+	public function get_root_dir()
+	{
+		return $this->root_dir;
+	}
+	
+	public function resolve_path($path)
+	{
+		if (!is_dir($path) && file_exists($path)) return $path;
+		
+		$pathinfo = pathinfo($path);
+		$path = $pathinfo['dirname'] . '/' . $pathinfo['basename'] . '/';
+		
+		if (file_exists($path . 'package.yml')) return $path . 'package.yml';
+		if (file_exists($path . 'package.yaml')) return $path . 'package.yaml';
+		if (file_exists($path . 'package.json')) return $path . 'package.json';
+		
+		throw new Exception("package.(yml|yaml|json) not found in $path.");
+	}
+	
+	protected function normalize_manifest()
+	{
+		$manifest = $this->manifest;
+		if (!is_array($manifest['sources'])){
+			# todo(ibolmo): 5, should be a class option
+			$manifest['sources'] = self::glob($this->path, $manifest['sources'], 0, 5);
+			foreach ($manifest['sources'] as $i => $source_path) $manifest['sources'][$i] = $this->root_dir . $source_path;
+ 		}
+	}
+	
+	protected function normalize_requires($require)
+	{
+		return implode('/', $this->parse_name($package_name, $require));
+	}
+	
+	protected function parse_name($default, $name){
+		$exploded = explode('/', $name);
+		$length = count($exploded);
+		if ($length == 1) return array($default, $exploded[0]);
+		if (empty($exploded[0])) return array($default, $exploded[1]);
+		return array($exploded[0], $exploded[1]);
+	}
+}
+
+
 class Packager {
 	
 	public static function warn($message){
@@ -23,103 +150,14 @@ class Packager {
 	private $files = array();
 
 	public function __construct($package_paths){
-		foreach ((array)$package_paths as $package_path) $this->parse_manifest($package_path);
-	}
-	
-	private function parse_manifest($path){
-		$pathinfo = pathinfo($path);
-		
-		if (is_dir($path)){
-			
-			$package_path = $pathinfo['dirname'] . '/' . $pathinfo['basename'] . '/';
-			if (file_exists($package_path . 'package.yml')){
-				$manifest_path = $package_path . 'package.yml';
-				$manifest_format = 'yaml';
-			} else if (file_exists($package_path . 'package.yaml')){
-				$manifest_path = $package_path . 'package.yaml';
-				$manifest_format = 'yaml';
-			} else if (file_exists($package_path . 'package.json')){
-				$manifest_path = $package_path . 'package.json';
-				$manifest_format = 'json';
-			}
-
-		} else if (file_exists($path)){
-			$package_path = $pathinfo['dirname'] . '/';
-			$manifest_path = $package_path . $pathinfo['basename'];
-			$manifest_format = $pathinfo['extension'];
+		foreach ((array) $package_paths as $package_path){
+			$package = new Package($package_path);
+			$name = $package->get_name();
+			if (!$this->root) $this->root = $name;
+			if (array_has($this->manifests, $name)) continue;
+			$this->packages[$name] = $package;
+			$this->manifests[$name] = $package->get_manifest();
 		}
-
-		if ($manifest_format == 'json') $manifest = json_decode(file_get_contents($manifest_path), true);
-		else if ($manifest_format == 'yaml' || $manifest_format == 'yml') $manifest = YAML::decode_file($manifest_path);
-
-		if (empty($manifest)) throw new Exception("manifest not found in $package_path, or unable to parse manifest.");
-
-		$package_name = $manifest['name'];
-
-		if ($this->root == null) $this->root = $package_name;
-
-		if (array_has($this->manifests, $package_name)) return;
-
-		$manifest['path'] = $package_path;
-		$manifest['manifest'] = $manifest_path;
-		
-		$this->manifests[$package_name] = $manifest;
-
-		if(!is_array($manifest['sources'])){
-			$manifest['sources'] = $this->bfglob($package_path, $manifest['sources'], 0, 5);
-			$patternUsed = true;
- 		}
-		foreach ($manifest['sources'] as $i => $path){
-
-			if (!empty($patternUsed)) $path = $package_path . $path;
-
-			// thomasd: if the source-node contains a description we cache it, but we wait if there's also a description-header in the file as this one takes precedence
-			if(is_array($path)){
-				$source_desc = $path[1];
-				$path = $path[0];
-			}
-			$path = $package_path . $path;
-			
-			// this is where we "hook" for possible other replacers.
-			$source = file_get_contents($path);
-
-			$descriptor = array();
-
-			// get contents of first comment
-			preg_match('/\/\*\s*^---(.*?)^(?:\.\.\.|---)\s*\*\//ms', $source, $matches);
-
-			if (!empty($matches)){
-				$descriptor = YAML::decode($matches[0]);
-			}
-			// thomasd: if the file doesn't contain a proper description-header but the manifest does, we take that description 
-			else if(isset($source_desc) && is_array($source_desc)){
-				$descriptor = $source_desc;
-			}
-
-			// populate / convert to array requires and provides
-			$requires = (array)(!empty($descriptor['requires']) ? $descriptor['requires'] : array());
-			$provides = (array)(!empty($descriptor['provides']) ? $descriptor['provides'] : array());
-			$file_name = !empty($descriptor['name']) ? $descriptor['name'] : basename($path, '.js');
-
-			// "normalization" for requires. Fills up the default package name from requires, if not present.
-			foreach ($requires as $i => $require)
-				$requires[$i] = implode('/', $this->parse_name($package_name, $require));
-			
-			$license = array_get($descriptor, 'license');
-			
-			$this->packages[$package_name][$file_name] = array_merge($descriptor, array(
-				'name' => $file_name,
-				'package' => $package_name,
-				'requires' => $requires,
-				'provides' => $provides,
-				'source' => $source,
-				'path' => $path,
-				'package/name' => $package_name . '/' . $file_name,
-				'license' => empty($license) ? array_get($manifest, 'license') : $license
-			));
-
-		}
-
 	}
 	
 	public function add_package($package_path){
@@ -129,31 +167,6 @@ class Packager {
 	public function remove_package($package_name){
 		unset($this->packages[$package_name]);
 		unset($this->manifests[$package_name]);
-	}
-	
-	// # private UTILITIES
-	
-	private function parse_name($default, $name){
-		$exploded = explode('/', $name);
-		$length = count($exploded);
-		if ($length == 1) return array($default, $exploded[0]);
-		if (empty($exploded[0])) return array($default, $exploded[1]);
-		return array($exploded[0], $exploded[1]);
-	}
-
-	private	function bfglob($path, $pattern = '*', $flags = 0, $depth = 0) {
-		$matches = array();
-		$folders = array(rtrim($path, DIRECTORY_SEPARATOR));
-	     
-		while($folder = array_shift($folders)) {
-		$matches = array_merge($matches, glob($folder.DIRECTORY_SEPARATOR.$pattern, $flags));
-			if($depth != 0) {
-				$moreFolders = glob($folder.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR);
-				$depth   = ($depth < -1) ? -1: $depth + count($moreFolders) - 2;
-				$folders = array_merge($folders, $moreFolders);
-			}
-		}
-		return $matches;
 	}
 	
 	// # private HASHES
@@ -299,9 +312,7 @@ class Packager {
 	public function get_all_files($of_package = null){
 		$files = array();
 		foreach ($this->packages as $name => $package){
-			if ($of_package == null || $of_package == $name) foreach ($package as $file){
-				$files[] = $file['package/name'];
-			}
+			if ($of_package == null || $of_package == $name) $files[] = $package->get_files();
 		}
 		return $files;
 	}
