@@ -14,7 +14,7 @@ class PackagerTest extends PHPUnit_Framework_TestCase
 	public function test_get_all_files()
 	{
 		$packages_files = self::$packager->get_all_files();
-		$this->assertEquals(4, count($packages_files[0]), 'Should be 4 files');
+		$this->assertEquals(4, count($packages_files), 'Should be 4 files');
 	}
 	
 	public function test_get_packages()
