@@ -218,13 +218,13 @@ class Packager {
 	}
 	
 	private function component_to_hash($name){
-		list($name, $component) = Package::parse_name($this->root, $name);
+		list($name, $component) = Source::parse_name($this->root, $name);
 		$package = array_get($this->packages, $name);
 		return !$package ? null : $package->get_source_with_component($component);
 	}
 	
 	private function file_to_hash($name){
-		list($name, $file) = Package::parse_name($this->root, $name);
+		list($name, $file) = Source::parse_name($this->root, $name);
 		$package = array_get($this->packages, $name);
 		return !$package ? null : $package->get_source_with_file($file);
 	}

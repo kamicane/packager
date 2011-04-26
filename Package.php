@@ -1,8 +1,9 @@
 <?php
 
+require dirname(__FILE__) . '/Source.php';
+
 class Package
 {
-	const DESCRIPTOR_REGEX = '/\/\*\s*^---(.*?)^(?:\.\.\.|---)\s*\*\//ms';
 	protected $sources = array();
 	
 	public function __construct(Packager $manager, $path){	
@@ -15,15 +16,7 @@ class Package
 
 		$this->name = $this->manifest['name'];
 		
-		foreach ($this->manifest['sources'] as $i => $source_path) {
-			$source_path = $this->root_dir . '/' . $source_path;
-			$descriptor = $this->get_descriptor($source_path);
-			$this->sources[$descriptor['name']] = array_merge($descriptor, array(
-				'package' => $this->name,
-				'path' => $source_path,
-				'package/name' => sprintf('%s/%s', $this->name, $descriptor['name'])
-			));
-		}
+		foreach ($this->manifest['sources'] as $i => $source_path) $this->add_source($source_path);
 	}
 	
 	static function decode($path){
@@ -45,31 +38,11 @@ class Package
 		return $matches;
 	}
 	
-	static function parse_name($default, $name){
-		$exploded = explode('/', $name);
-		$length = count($exploded);
-		if ($length == 1) return array($default, $exploded[0]);
-		if (empty($exploded[0])) return array($default, $exploded[1]);
-		return array($exploded[0], $exploded[1]);
-	}
-	
-	public function get_descriptor($source_path){
-		$source = file_get_contents($source_path);
-		
-		preg_match(self::DESCRIPTOR_REGEX, $source, $matches);
-		if (empty($matches)) return array();
-		
-		$descriptor = YAML::decode($matches[0]);
-
-		if (!isset($descriptor['name'])) $descriptor['name'] = basename($source_path, '.js');
-		if (!isset($descriptorp['license'])) $descriptor['license'] = array_get($this->manifest, 'license');
-		$descriptor['source'] = $source;
-		$descriptor['provides'] = (array) array_get($descriptor, 'provides');
-		
-		$requires = (array) array_get($descriptor, 'requires');
-		$descriptor['requires'] = array_map(array($this, 'normalize_requires'), $requires);
-		
-		return $descriptor;
+	public function add_source($source_path)
+	{
+		$source = ($source_path instanceof Source) ? $source_path : new Source($this, $this->root_dir . '/' . $source_path);
+		$descriptor = $source->get_descriptor();
+		$this->sources[$descriptor['name']] = $descriptor;
 	}
 	
 	public function get_files(){
@@ -134,9 +107,5 @@ class Package
 			$manifest['sources'] = self::glob($this->path, $manifest['sources'], 0, 5);
 			foreach ($manifest['sources'] as $i => $source_path) $manifest['sources'][$i] = $this->root_dir . $source_path;
  		}
-	}
-	
-	protected function normalize_requires($require){
-		return implode('/', self::parse_name($this->name, $require));
 	}
 }
