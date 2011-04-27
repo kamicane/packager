@@ -12,15 +12,14 @@ class Source
 	
 	static function parse_name($default, $name){
 		$exploded = explode('/', $name);
-		$length = count($exploded);
-		if ($length == 1) return array($default, $exploded[0]);
+		if (count($exploded) == 1) return array($default, $exploded[0]);
 		if (empty($exploded[0])) return array($default, $exploded[1]);
 		return array($exploded[0], $exploded[1]);
 	}
 	
-	public function get_descriptor()
+	public function get_descriptor($source = '')
 	{
-		$source = file_get_contents($this->path);
+		if (!$source) $source = file_get_contents($this->path);
 		
 		preg_match(self::DESCRIPTOR_REGEX, $source, $matches);
 		if (empty($matches)) return array();
