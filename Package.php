@@ -5,6 +5,8 @@ require dirname(__FILE__) . '/Source.php';
 
 class Package
 {
+	protected $sources = array();
+	
 	public function __construct($package_path = '')
 	{
 		if ($package_path){
@@ -35,8 +37,8 @@ class Package
 	
 	public function add_source($source_path = '')
 	{
-		if (!is_a($source, 'Source')) $source = new Source($source_path);
-		throw new Exception('TODO');
+		if (!is_a($source_path, 'Source')) $source_path = new Source($source_path);
+		$this->sources[] = $source_path;
 	}
 	
 	public function parse($package_path)

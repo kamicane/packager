@@ -1,10 +1,14 @@
 <?php
 
-require dirname(__FILE__) . '/helpers/yaml.php';
+require dirname(__FILE__) . '/Packager.php';
 
 class Source
 {
 	const DESCRIPTOR_REGEX = '/\/\*\s*^---(.*?)^(?:\.\.\.|---)\s*\*\//ms';
+	
+	protected $code = '';
+	protected $provides = array();
+	protected $requires = array(); 
 	
 	function __construct($package_name, $source_path = '')
 	{
@@ -29,10 +33,18 @@ class Source
 		return $this->name;
 	}
 	
-	public function parse($source_path)
+	public function get_code()
 	{
-		$this->source = file_get_contents($source_path);
-		preg_match(self::DESCRIPTOR_REGEX, $this->source, $matches);
+		return $this->code;
+	}
+	
+	public function parse($source_path = '')
+	{
+		if ($source_path) $this->code = file_get_contents($source_path);
+		
+		if (!$this->code) throw new RuntimeException('Missing the code to parse. Did you forget to supply the source_path or set_code?');
+		
+		preg_match(self::DESCRIPTOR_REGEX, $this->code, $matches);
 		if (empty($matches)) throw new Exception("No yaml header present in $source_path");
 		
 		$header = YAML::decode($matches[0]);
@@ -62,11 +74,33 @@ class Source
 	
 	public function provides($provides)
 	{
-		throw new Exception('TODO');
+		$packager = Packager::get_instance();
+		foreach ($provides as $component){
+			$packager->add_component($source, $component);
+			$this->provides[] = $component;
+		}
+		return $this;
 	}
 	
 	public function requires($requires)
 	{
-		throw new Exception('TODO');
+		$packager = Packager::get_instance();
+		foreach ($requires as $component){
+			$packager->add_dependency($source, $component);
+			$this->requires[] = $component;
+		}
+		return $this;
+	}
+	
+	public function set_name($name)
+	{
+		$this->name = $name;
+		return $this;
+	}
+	
+	public function set_code($code)
+	{
+		$this->code = $code;
+		return $this;
 	}
 }
