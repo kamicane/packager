@@ -27,15 +27,20 @@ class Source
 		return array($exploded[0], $exploded[1]);
 	}
 	
+	public function get_code()
+	{
+		return $this->code;
+	}
+	
 	public function get_name()
 	{
 		if (!$this->name) $this->name = basename($this->path, '.js');
 		return $this->name;
 	}
 	
-	public function get_code()
+	public function get_package_name()
 	{
-		return $this->code;
+		return $this->package_name;
 	}
 	
 	public function parse($source_path = '')
