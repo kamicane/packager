@@ -6,7 +6,7 @@ class Packager {
 
 	static $instance;
 
-	protected $components = array();
+	protected $sources = array();
 	protected $generators = array();
 	protected $keys = array();
 
@@ -52,7 +52,8 @@ class Packager {
 	{
 		$index = $this->get_component_index($source, $component);
 		if ($index < 0){
-			$index = array_push($this->components, $component) - 1;
+			# todo(ibolmo): this smells because $component is not really useful since right now we're adding source files together, and not components.
+			$index = array_push($this->sources, $source) - 1;
 			foreach ($this->generators as $generator){
 				list($callback, $name) = $generator;
 				$this->set_key(call_user_func($callback, $source, $component), $index, $name);
@@ -84,15 +85,3 @@ class Packager {
 	}
 	
 }
-
-/*
-
-	Beginning of time :: [], {}
-  Add a component :: [Component_0], {key: index_0, alias: index_0, other_alias: index_0}
-	Add a component :: [Component_0, Component_1], {key_0: index_0, alias_0: index_0, other_alias_0: index_0, key_1: index_1, alias_1: index_1, other_alias_1: index_1}
-	
-	Beginning of time :: [], {}
-	Add a component :: [Component], {key: index, ...}
-	Add a dependency ::
-
-*/
