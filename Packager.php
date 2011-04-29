@@ -52,11 +52,11 @@ class Packager {
 	{
 		$index = $this->get_component_index($source, $component);
 		if ($index < 0){
-			# todo(ibolmo): this smells because $component is not really useful since right now we're adding source files together, and not components.
+			# note(ibolmo): this smells because $component is not really useful since right now we're adding source files together, and not components.
 			$index = array_push($this->sources, $source) - 1;
 			foreach ($this->generators as $generator){
-				list($callback, $name) = $generator;
-				$this->set_key(call_user_func($callback, $source, $component), $index, $name);
+				$key = call_user_func($generator['callback'], $source, $component);
+				$this->set_key($key, $index, $generator['name']);
 			}
 		}
 		return $index;
