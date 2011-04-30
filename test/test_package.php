@@ -1,13 +1,13 @@
 <?php
 
-require_once dirname(__FILE__) . '/../packager.php';
+require_once __DIR__ . '/../packager.php';
 
 class PackageTest extends PHPUnit_Framework_TestCase
 {
 	public function test_constructor()
 	{
 		$packager = new Packager(array());
-		$package = new Package($packager, dirname(__FILE__) . '/fixtures/package.yml');
+		$package = new Package($packager, __DIR__ . '/fixtures/package.yml');
 		$packager->add_package($package);
 		return $package;
 	}

@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/../packager.php';
+require_once __DIR__ . '/../packager.php';
 
 class PackagerTest extends PHPUnit_Framework_TestCase
 {
@@ -8,7 +8,7 @@ class PackagerTest extends PHPUnit_Framework_TestCase
 	
 	public function setUp()
 	{
-		self::$packager = new Packager(dirname(__FILE__) . '/fixtures/package.yml');
+		self::$packager = new Packager(__DIR__ . '/fixtures/package.yml');
 	}
 	
 	public function test_get_all_files()
@@ -58,7 +58,7 @@ class PackagerTest extends PHPUnit_Framework_TestCase
 	
 	public function test_get_file_source()
 	{
-		$source = file_get_contents(dirname(__FILE__).'/fixtures/Source/Class.js');
+		$source = file_get_contents(__DIR__.'/fixtures/Source/Class.js');
 		$this->assertEquals($source, self::$packager->get_file_source('Class'));
 	}
 }

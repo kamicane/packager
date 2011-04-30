@@ -1,6 +1,6 @@
 <?php
 
-require dirname(__FILE__) . '/Packager.php';
+require __DIR__ . '/Packager.php';
 
 class Source
 {

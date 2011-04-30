@@ -1,7 +1,7 @@
 <?php
 
-require dirname(__FILE__) . '/helpers/yaml.php';
-require dirname(__FILE__) . '/Source.php';
+require __DIR__ . '/helpers/yaml.php';
+require __DIR__ . '/Source.php';
 
 class Package
 {
