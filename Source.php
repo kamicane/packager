@@ -10,7 +10,7 @@ class Source
 	protected $provides = array();
 	protected $requires = array(); 
 	
-	function __construct($package_name, $source_path = '')
+	public function __construct($package_name, $source_path = '')
 	{
 		$this->package_name = $package_name;
 		
@@ -18,6 +18,11 @@ class Source
 			$this->path = $source_path;
 			$this->parse($source_path);
 		}
+	}
+	
+	public function __toString()
+	{
+		return $this->get_name();
 	}
 	
 	static function parse_name($default, $name){
@@ -81,7 +86,8 @@ class Source
 	{
 		$packager = Packager::get_instance();
 		foreach ($provides as $component){
-			$packager->add_component($source, $component);
+			$component = new Component($this, $component);
+			$packager->add_component($component);
 			$this->provides[] = $component;
 		}
 		return $this;
@@ -91,7 +97,7 @@ class Source
 	{
 		$packager = Packager::get_instance();
 		foreach ($requires as $component){
-			$packager->add_dependency($source, $component);
+			$component = $packager->add_dependency($this, $component);
 			$this->requires[] = $component;
 		}
 		return $this;

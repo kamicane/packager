@@ -33,8 +33,10 @@ class Packager {
 		});
 	}
 	
-	public function get_component_index(Source $source, $component)
+	public function get_component_index(Component $component)
 	{
+		$source = $component->get_source();
+		$component = $component->get_name();
 		foreach ($this->generators as $generator){
 			$key = call_user_func($generator['callback'], $source, $component);
 			if (isset($this->keys[$key])) return $this->keys[$key];
@@ -48,12 +50,13 @@ class Packager {
 		return self::$instance;
 	}
 	
-	public function add_component(Source $source, $component)
+	public function add_component(Component $component)
 	{
-		$index = $this->get_component_index($source, $component);
+		$index = $this->get_component_index($component);
 		if ($index < 0){
-			# note(ibolmo): this smells because $component is not really useful since right now we're adding source files together, and not components.
-			$index = array_push($this->sources, $source) - 1;
+			$source = $component->get_source();
+			$index = array_push($this->sources, array('source' => $source, 'requires' => array())) - 1;
+			
 			foreach ($this->generators as $generator){
 				$key = call_user_func($generator['callback'], $source, $component);
 				$this->set_key($key, $index, $generator['name']);
@@ -62,9 +65,16 @@ class Packager {
 		return $index;
 	}
 	
+	/*
+		Add dependency between source and component.
+	*/
 	public function add_dependency(Source $source, $component)
-	{
-		throw new Exception('TODO');
+	{	
+		$name = $source->get_name();
+		if (isset($this->keys[$name])) $source_index = $this->keys[$name];
+		else throw new Exception("Could not find source, $name.");
+		
+		array_include($this->sources[$key]['requires'], $component);
 	}
 	
 	public function add_generator($name, $callback)
