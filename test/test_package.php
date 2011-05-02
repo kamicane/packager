@@ -1,55 +1,21 @@
 <?php
 
-require_once __DIR__ . '/../packager.php';
+require_once __DIR__ . '/../Package.php';
 
 class PackageTest extends PHPUnit_Framework_TestCase
 {
 	public function test_constructor()
 	{
-		$packager = new Packager(array());
-		$package = new Package($packager, __DIR__ . '/fixtures/package.yml');
-		$packager->add_package($package);
-		return $package;
+		$package = new Package();
+		$package = new Package(__DIR__ . '/fixtures/package.yml');
 	}
 	
-	/**
-	 * @depends test_constructor
-	 */
-	public function test_get_manifest($package)
+	public function test_parse_sources()
 	{
-		$manifest = $package->get_manifest();
-		$this->assertEquals(4, count($manifest));
-		$this->assertEquals('Core', $manifest['name']);
-	}
-	
-	/**
-	 * @depends test_constructor
-	 */
-	public function test_get_source_with_component($package)
-	{
-		$descriptor = $package->get_source_with_component('Core');
-		$this->assertEquals(0, count($descriptor['requires']));
-		$this->assertEquals('Core/Core', $descriptor['package/name']);
-		
-		$descriptor = $package->get_source_with_component('Array');
-		$this->assertEquals(1, count($descriptor['requires']));
-		$this->assertEquals('Core/Type', $descriptor['requires'][0]);
-		$this->assertEquals('Core/Array', $descriptor['package/name']);
-	}
-	
-	/**
-	 * @depends test_constructor
-	 */
-	public function test_get_source_with_file($package)
-	{
-		$descriptor = $package->get_source_with_file('Class');
-		
-		$this->assertEquals('Class', $descriptor['name']);
-		
-		$this->assertEquals(1, count($descriptor['requires']));
-		$this->assertEquals('Core/Array', $descriptor['requires'][0]);
-		
-		$this->assertEquals(1, count($descriptor['provides']));
-		$this->assertEquals('Class', $descriptor['provides'][0]);
+		$package = new Package();
+		$package->parse_sources(array(
+			__DIR__ . '/fixtures/Source/Core.js',
+			__DIR__ . '/fixtures/Source/Browser.js'
+		));
 	}
 }

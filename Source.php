@@ -1,6 +1,7 @@
 <?php
 
-require __DIR__ . '/Packager.php';
+require_once __DIR__ . '/Packager.php';
+require_once __DIR__ . '/Component.php';
 
 class Source
 {
@@ -14,10 +15,7 @@ class Source
 	{
 		$this->package_name = $package_name;
 		
-		if ($source_path){
-			$this->path = $source_path;
-			$this->parse($source_path);
-		}
+		if ($source_path) $this->parse($source_path);
 	}
 	
 	public function __toString()
@@ -25,7 +23,7 @@ class Source
 		return $this->get_name();
 	}
 	
-	static function parse_name($default, $name){
+	static function normalize_name($default, $name){
 		$exploded = explode('/', $name);
 		if (count($exploded) == 1) return array($default, $exploded[0]);
 		if (empty($exploded[0])) return array($default, $exploded[1]);
@@ -48,9 +46,22 @@ class Source
 		return $this->package_name;
 	}
 	
+	public function get_provides()
+	{
+		return $this->provides;
+	}
+	
+	public function get_requires()
+	{
+		return $this->requires;
+	}
+	
 	public function parse($source_path = '')
 	{
-		if ($source_path) $this->code = file_get_contents($source_path);
+		if ($source_path){
+			$this->path = $source_path;
+			$this->code = file_get_contents($source_path);
+		}
 		
 		if (!$this->code) throw new RuntimeException('Missing the code to parse. Did you forget to supply the source_path or set_code?');
 		
@@ -58,6 +69,9 @@ class Source
 		if (empty($matches)) throw new Exception("No yaml header present in $source_path");
 		
 		$header = YAML::decode($matches[0]);
+		# note(ibolmo): This is a band-aid fix for the provides and requires ordering. 
+		ksort($header);
+		
 		foreach($header as $key => $value){
 			$method = 'parse_' . strtolower($key);
 			if (is_callable(array($this, $method))) $this->$method($value);
@@ -78,7 +92,7 @@ class Source
 	public function parse_requires($requires)
 	{
 		$requires = (array) $requires;
-		foreach ($requires as $i => $require) $require[$i] = implode('/', self::parse_name($this->package_name, $require));
+		foreach ($requires as $i => $require) $requires[$i] = implode('/', self::normalize_name($this->package_name, $require));
 		$this->requires($requires);
 	}
 	
@@ -86,8 +100,7 @@ class Source
 	{
 		$packager = Packager::get_instance();
 		foreach ($provides as $component){
-			$component = new Component($this, $component);
-			$packager->add_component($component);
+			$packager->add_component($this, $component);
 			$this->provides[] = $component;
 		}
 		return $this;
@@ -97,7 +110,7 @@ class Source
 	{
 		$packager = Packager::get_instance();
 		foreach ($requires as $component){
-			$component = $packager->add_dependency($this, $component);
+			$packager->add_dependency($this, $component);
 			$this->requires[] = $component;
 		}
 		return $this;

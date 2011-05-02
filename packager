@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-require dirname(__FILE__) . '/packager.php';
+require __DIR__ . '/packager.php';
 
 $executable = array_shift($argv);
 $command = array_shift($argv);
@@ -194,7 +194,7 @@ switch ($command){
 }
 
 function usage($command = ''){
-	$dir = dirname(__FILE__);
+	$dir = __DIR__;
 	if (empty($command) || !file_exists("$dir/help/$command.txt")) $command = 'default';
 	echo file_get_contents("$dir/help/$command.txt");
 }

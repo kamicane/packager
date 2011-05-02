@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/Package.php';
+require_once __DIR__ . '/Package.php';
 
 class Packager {
 
@@ -33,15 +33,10 @@ class Packager {
 		});
 	}
 	
-	public function get_component_index(Component $component)
+	public function get_source_index($source)
 	{
-		$source = $component->get_source();
-		$component = $component->get_name();
-		foreach ($this->generators as $generator){
-			$key = call_user_func($generator['callback'], $source, $component);
-			if (isset($this->keys[$key])) return $this->keys[$key];
-		}
-		return -1;
+		$key = $source->get_name();
+		return isset($this->keys[$key]) ? $this->keys[$key] : -1;
 	}
 	
 	static function get_instance()
@@ -50,18 +45,16 @@ class Packager {
 		return self::$instance;
 	}
 	
-	public function add_component(Component $component)
+	public function add_component(Source $source, $component)
 	{
-		$index = $this->get_component_index($component);
-		if ($index < 0){
-			$source = $component->get_source();
-			$index = array_push($this->sources, array('source' => $source, 'requires' => array())) - 1;
-			
-			foreach ($this->generators as $generator){
-				$key = call_user_func($generator['callback'], $source, $component);
-				$this->set_key($key, $index, $generator['name']);
-			}
+		$index = $this->get_source_index($source);
+		if ($index < 0) $index = array_push($this->sources, array('source' => $source, 'requires' => array())) - 1;
+
+		foreach ($this->generators as $generator){
+			$key = call_user_func($generator['callback'], $source, $component);
+			$this->set_key($key, $index, $generator['name']);
 		}
+		
 		return $index;
 	}
 	
@@ -69,12 +62,10 @@ class Packager {
 		Add dependency between source and component.
 	*/
 	public function add_dependency(Source $source, $component)
-	{	
-		$name = $source->get_name();
-		if (isset($this->keys[$name])) $source_index = $this->keys[$name];
-		else throw new Exception("Could not find source, $name.");
-		
-		array_include($this->sources[$key]['requires'], $component);
+	{
+		$index = $this->get_source_index($source);
+		if ($index < 0) throw new Exception("Could not find source '$source'.");
+		$this->sources[$index]['requires'][] = $component;
 	}
 	
 	public function add_generator($name, $callback)
@@ -90,8 +81,13 @@ class Packager {
 	
 	protected function set_key($key, $index, $generator_name)
 	{
-		if (isset($this->keys[$key])) throw new Exception("Generator, $generator_name, attempted to override component key, $key.");
+		if (isset($this->keys[$key])) $this->warn("Generator '$generator_name' set component key '$key'.");
 		$this->keys[$key] = $index;
+	}
+	
+	protected function warn($message)
+	{
+		# todo(ibolmo): log mixin
 	}
 	
 }

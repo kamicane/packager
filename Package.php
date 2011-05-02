@@ -1,7 +1,7 @@
 <?php
 
-require __DIR__ . '/helpers/yaml.php';
-require __DIR__ . '/Source.php';
+require_once __DIR__ . '/helpers/yaml.php';
+require_once __DIR__ . '/Source.php';
 
 class Package
 {
@@ -14,6 +14,11 @@ class Package
 			$this->root_dir = dirname($this->path);
 			$this->parse($package_path);
 		}
+	}
+	
+	public function __toString()
+	{
+		return $this->get_name();
 	}
 	
 	static function decode($path){
@@ -37,8 +42,18 @@ class Package
 	
 	public function add_source($source_path = '')
 	{
-		if (!is_a($source_path, 'Source')) $source_path = new Source($source_path);
+		if (!is_a($source_path, 'Source')) $source_path = new Source($this, $source_path);
 		$this->sources[] = $source_path;
+	}
+	
+	public function get_name()
+	{
+		return $this->name;
+	}
+	
+	public function get_sources()
+	{
+		return clone $this->sources;
 	}
 	
 	public function parse($package_path)
@@ -53,7 +68,7 @@ class Package
 	
 	public function parse_name($name)
 	{
-		$this->name = $name;
+		$this->set_name($name);
 	}
 	
 	public function parse_sources($sources)
@@ -64,6 +79,12 @@ class Package
 			foreach ($sources as $i => $source_path) $sources[$i] = $this->root_dir . $source_path;
 		}
 		foreach ($sources as $source) $this->add_source($source);
+	}
+	
+	public function set_name($name)
+	{
+		$this->name = $name;
+		return $this;
 	}
 	
 	public function resolve_path($path){
