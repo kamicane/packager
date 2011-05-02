@@ -42,7 +42,7 @@ class Package
 	
 	public function add_source($source_path = '')
 	{
-		if (!is_a($source_path, 'Source')) $source_path = new Source($this, $source_path);
+		if (!is_a($source_path, 'Source')) $source_path = new Source($this->get_name(), $source_path);
 		$this->sources[] = $source_path;
 	}
 	
@@ -53,7 +53,7 @@ class Package
 	
 	public function get_sources()
 	{
-		return clone $this->sources;
+		return $this->sources;
 	}
 	
 	public function parse($package_path)
@@ -74,11 +74,8 @@ class Package
 	public function parse_sources($sources)
 	{
 		# todo(ibolmo): 5, should be a class option.
-		if (is_string($sources)){
-			$sources = self::glob($this->path, $sources, 0, 5);
-			foreach ($sources as $i => $source_path) $sources[$i] = $this->root_dir . $source_path;
-		}
-		foreach ($sources as $source) $this->add_source($source);
+		if (is_string($sources)) $sources = self::glob($this->path, $sources, 0, 5);
+		foreach ($sources as $source) $this->add_source($this->root_dir . '/' . $source);
 	}
 	
 	public function set_name($name)

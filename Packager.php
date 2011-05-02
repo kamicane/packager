@@ -50,9 +50,9 @@ class Packager {
 		$index = $this->get_source_index($source);
 		if ($index < 0) $index = array_push($this->sources, array('source' => $source, 'requires' => array())) - 1;
 
-		foreach ($this->generators as $generator){
-			$key = call_user_func($generator['callback'], $source, $component);
-			$this->set_key($key, $index, $generator['name']);
+		foreach ($this->generators as $name => $callback){
+			$key = call_user_func($callback, $source, $component);
+			$this->set_key($key, $index, $name);
 		}
 		
 		return $index;
@@ -70,7 +70,7 @@ class Packager {
 	
 	public function add_generator($name, $callback)
 	{
-		$this->generators[] = array('name' => $name, 'callback' => $callback);
+		$this->generators[$name] = $callback;
 	}
 	
 	public function add_package($package)

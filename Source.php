@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . '/Packager.php';
-require_once __DIR__ . '/Component.php';
 
 class Source
 {
@@ -14,7 +13,6 @@ class Source
 	public function __construct($package_name, $source_path = '')
 	{
 		$this->package_name = $package_name;
-		
 		if ($source_path) $this->parse($source_path);
 	}
 	
