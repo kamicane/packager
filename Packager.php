@@ -18,6 +18,12 @@ class Packager {
 		if ($package_paths) foreach ((array) $package_paths as $package) $this->add_package($package);
 	}
 	
+	static function get_instance()
+	{
+		if (!self::$instance) self::$instance = new Packager();
+		return self::$instance;
+	}
+	
 	public function configure()
 	{
 		$this->add_generator('component name', function(Source $source, $component){
@@ -39,10 +45,9 @@ class Packager {
 		return isset($this->keys[$key]) ? $this->keys[$key] : -1;
 	}
 	
-	static function get_instance()
+	public function get_sources()
 	{
-		if (!self::$instance) self::$instance = new Packager();
-		return self::$instance;
+		return $this->sources;
 	}
 	
 	public function add_component(Source $source, $component)
@@ -64,7 +69,8 @@ class Packager {
 	public function add_dependency(Source $source, $component)
 	{
 		$index = $this->get_source_index($source);
-		if ($index < 0) throw new Exception("Could not find source '$source'.");
+		if ($index < 0) $index = array_push($this->sources, array('source' => $source, 'requires' => array())) - 1;
+		
 		$this->sources[$index]['requires'][] = $component;
 	}
 	

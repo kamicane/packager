@@ -67,8 +67,6 @@ class Source
 		if (empty($matches)) throw new Exception("No yaml header present in $source_path");
 		
 		$header = YAML::decode($matches[0]);
-		# note(ibolmo): This is a band-aid fix for the provides and requires ordering. 
-		ksort($header);
 		
 		foreach($header as $key => $value){
 			$method = 'parse_' . strtolower($key);
