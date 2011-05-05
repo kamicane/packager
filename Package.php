@@ -12,7 +12,7 @@ class Package
 		if ($package_path){
 			$this->path = $this->resolve_path($package_path);
 			$this->root_dir = dirname($this->path);
-			$this->parse($package_path);
+			$this->parse($this->path);
 		}
 	}
 	

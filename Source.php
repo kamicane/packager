@@ -28,6 +28,11 @@ class Source
 		return array($exploded[0], $exploded[1]);
 	}
 	
+	public function build()
+	{
+		return Packager::build($this);
+	}
+	
 	public function get_code()
 	{
 		return $this->code;
@@ -52,6 +57,11 @@ class Source
 	public function get_requires()
 	{
 		return $this->requires;
+	}
+	
+	public function has_requires()
+	{
+		return !empty($this->requires);
 	}
 	
 	public function parse($source_path = '')
@@ -104,11 +114,7 @@ class Source
 	
 	public function requires($requires)
 	{
-		$packager = Packager::get_instance();
-		foreach ($requires as $component){
-			$packager->add_dependency($this, $component);
-			$this->requires[] = $component;
-		}
+		$this->requires = $requires;
 		return $this;
 	}
 	

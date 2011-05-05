@@ -22,4 +22,29 @@ class SourceTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(array('Class'), $source->get_provides());
 		$this->assertEquals(array('Core/Array'), $source->get_requires());
 	}
+	
+	public function test_no_deps_build()
+	{
+		$source = new Source('test');
+
+		$code = '/* code */';
+		$source->set_code($code);
+		
+		$this->assertEquals($code, $source->build());
+	}
+	
+	public function test_deps_build()
+	{
+		$source = new Source('Core');
+		$source->provides('Type');
+		$core_code = '/* Core */';
+		$source->set_code($core_code);
+		
+		$source = new Source('Array');
+		$source->requires('Type');
+		$array_code = '/* Array */';
+		$source->set_code($array_code);
+		
+		$this->assertEquals($core_code.$array_code, $source->build());
+	}
 }

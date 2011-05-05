@@ -24,19 +24,67 @@ class Packager {
 		return self::$instance;
 	}
 	
+	public function add_component(Source $source, $component)
+	{
+		$index = $this->get_source_index($source);
+		if ($index < 0) $index = $this->add_source($source);
+		
+		foreach ($this->generators as $name => $callback){
+			$key = call_user_func($callback, $source, $component);
+			$this->set_key($key, $index, $name);
+		}
+		
+		return $index;
+	}
+	
+	public function add_generator($name, $callback)
+	{
+		$this->generators[$name] = $callback;
+	}
+	
+	public function add_package($package)
+	{
+		if (!is_a($package, 'Package')) $package = new Package($package);
+		$this->packages[] = $package;
+	}
+	
+	public function add_source(Source $source)
+	{
+		$index = array_push($this->sources, $source) - 1;
+		return $this->keys[$source->get_name()] = $index;
+	}
+	
+ 	public function build(Source $source)
+	{
+		$build = array();
+		
+		array_unshift($source->get_code());
+		
+		foreach ($this->get_required_for_source($source) as $required){
+			array_unshift($build, $required->get_code());
+		}
+		
+		return implode("\n", $build);
+	}
+	
 	public function configure()
 	{
 		$this->add_generator('component name', function(Source $source, $component){
 			return $component;
 		});
 		
-		$this->add_generator('source name', function(Source $source, $component){
-			return $source->get_name();
-		});
-		
 		$this->add_generator('package and source name', function(Source $source, $component){
 			return sprintf('%s/%s', $source->get_package_name(), $source->get_name());
 		});
+		
+		$this->add_generator('package and component name', function(Source $source, $component){
+			return sprintf('%s/%s', $source->get_package_name(), $component);
+		});
+	}
+	
+	public function get_source_by_name($name)
+	{
+		return isset($this->sources[$name]) ? $this->sources[$name] : null;
 	}
 	
 	public function get_source_index($source)
@@ -50,39 +98,22 @@ class Packager {
 		return $this->sources;
 	}
 	
-	public function add_component(Source $source, $component)
+	public function get_required_for_source(Source $source, $required = null)
 	{
+		$return = false;
+		if (!$required){
+			$return = true;
+			$required = array();
+		}
 		$index = $this->get_source_index($source);
-		if ($index < 0) $index = array_push($this->sources, array('source' => $source, 'requires' => array())) - 1;
-
-		foreach ($this->generators as $name => $callback){
-			$key = call_user_func($callback, $source, $component);
-			$this->set_key($key, $index, $name);
+		
+		foreach ($this->sources[$index]->get_requires() as $component){
+			if (!isset($this->keys[$component])) throw new Exception("Could not find '$component'.");
+			$required[] = $source = $this->sources[$this->keys[$component]];
+			if ($source->has_requires()) $this->get_required_for_source($source, &$required);
 		}
 		
-		return $index;
-	}
-	
-	/*
-		Add dependency between source and component.
-	*/
-	public function add_dependency(Source $source, $component)
-	{
-		$index = $this->get_source_index($source);
-		if ($index < 0) $index = array_push($this->sources, array('source' => $source, 'requires' => array())) - 1;
-		
-		$this->sources[$index]['requires'][] = $component;
-	}
-	
-	public function add_generator($name, $callback)
-	{
-		$this->generators[$name] = $callback;
-	}
-	
-	public function add_package($package)
-	{
-		if (!is_a($package, 'Package')) $package = new Package($package);
-		$this->packages[] = $package;
+		if ($return) return $required;
 	}
 	
 	protected function set_key($key, $index, $generator_name)
