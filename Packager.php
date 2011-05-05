@@ -58,7 +58,7 @@ class Packager {
 	{
 		$build = array();
 		
-		array_unshift($source->get_code());
+		array_unshift($build, $source->get_code());
 		
 		foreach ($this->get_required_for_source($source) as $required){
 			array_unshift($build, $required->get_code());
@@ -84,7 +84,7 @@ class Packager {
 	
 	public function get_source_by_name($name)
 	{
-		return isset($this->sources[$name]) ? $this->sources[$name] : null;
+		return isset($this->keys[$name]) ? $this->sources[$this->keys[$name]] : null;
 	}
 	
 	public function get_source_index($source)

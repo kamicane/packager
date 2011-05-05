@@ -41,10 +41,21 @@ class PackagerTest extends PHPUnit_Framework_TestCase
 	
 	public function test_get_source_by_name()
 	{
-		$packager = Packaget::get_instance();
+		$packager = Packager::get_instance();
 		$source = $packager->get_source_by_name('Class');
-
-		$packager->build($source);
+		$this->assertEquals('Class', $source->get_name());
+	}
+	
+	public function test_build()
+	{
+		$packager = Packager::get_instance();
+		$source = $packager->get_source_by_name('Class');
+		$build = array(
+			file_get_contents(__DIR__ . '/fixtures/Source/Core.js'),
+			file_get_contents(__DIR__ . '/fixtures/Source/Array.js'),
+			file_get_contents(__DIR__ . '/fixtures/Source/Class.js')
+		);
+		$this->assertEquals(implode("\n", $build), $packager->build($source));
 	}
 }
 
