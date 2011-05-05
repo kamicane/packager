@@ -9,8 +9,6 @@ class Packager {
 	protected $sources = array();
 	protected $generators = array();
 	protected $keys = array();
-
-	private static $graph = array();
 	
 	public function __construct($package_paths = '')
 	{
@@ -101,10 +99,8 @@ class Packager {
 			$return = true;
 			$required = array();
 		}
-		$index = $this->get_source_index($source);
-		if ($index < 0) $index = $this->add_source($source);
 		
-		foreach ($this->sources[$index]->get_requires() as $component){
+		foreach ($source->get_requires() as $component){
 			if (!isset($this->keys[$component])) throw new Exception("Could not find '$component'.");
 			$required[] = $source = $this->sources[$this->keys[$component]];
 			if ($source->has_requires()) $this->get_required_for_source($source, &$required);
