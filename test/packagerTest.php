@@ -55,7 +55,7 @@ class PackagerTest extends PHPUnit_Framework_TestCase
 			file_get_contents(__DIR__ . '/fixtures/Source/Array.js'),
 			file_get_contents(__DIR__ . '/fixtures/Source/Class.js')
 		);
-		$this->assertEquals(implode("\n", $build), $packager->build($source));
+		$this->assertEquals(implode('', $build), $packager->build($source));
 	}
 }
 

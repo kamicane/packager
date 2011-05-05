@@ -56,15 +56,11 @@ class Packager {
 	
  	public function build(Source $source)
 	{
-		$build = array();
+		$build = array($source->get_code());
 		
-		array_unshift($build, $source->get_code());
+		foreach ($this->get_required_for_source($source) as $required) array_unshift($build, $required->get_code());
 		
-		foreach ($this->get_required_for_source($source) as $required){
-			array_unshift($build, $required->get_code());
-		}
-		
-		return implode("\n", $build);
+		return implode('', $build);
 	}
 	
 	public function configure()
@@ -106,6 +102,7 @@ class Packager {
 			$required = array();
 		}
 		$index = $this->get_source_index($source);
+		if ($index < 0) $index = $this->add_source($source);
 		
 		foreach ($this->sources[$index]->get_requires() as $component){
 			if (!isset($this->keys[$component])) throw new Exception("Could not find '$component'.");

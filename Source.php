@@ -30,7 +30,7 @@ class Source
 	
 	public function build()
 	{
-		return Packager::build($this);
+		return Packager::get_instance()->build($this);
 	}
 	
 	public function get_code()
@@ -41,6 +41,7 @@ class Source
 	public function get_name()
 	{
 		if (!$this->name) $this->name = basename($this->path, '.js');
+		if (!$this->name) $this->name = $this->package_name;
 		return $this->name;
 	}
 	
@@ -105,7 +106,7 @@ class Source
 	public function provides($provides)
 	{
 		$packager = Packager::get_instance();
-		foreach ($provides as $component){
+		foreach ((array) $provides as $component){
 			$packager->add_component($this, $component);
 			$this->provides[] = $component;
 		}
@@ -114,7 +115,7 @@ class Source
 	
 	public function requires($requires)
 	{
-		$this->requires = $requires;
+		$this->requires = (array) $requires;
 		return $this;
 	}
 	

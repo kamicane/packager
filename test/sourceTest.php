@@ -4,13 +4,13 @@ require_once __DIR__ . '/../Source.php';
 
 class SourceTest extends PHPUnit_Framework_TestCase
 {
-	public function test_constructor()
+	public function xtest_constructor()
 	{
 		$source = new Source('test');
 		$source = new Source('test', __DIR__ . '/fixtures/Source/Core.js');
 	}
 	
-	public function test_parse()
+	public function xtest_parse()
 	{
 		$source_path = __DIR__ . '/fixtures/Source/Class.js';
 		$source = new Source('Core');
@@ -23,7 +23,7 @@ class SourceTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(array('Core/Array'), $source->get_requires());
 	}
 	
-	public function test_no_deps_build()
+	public function xtest_no_deps_build()
 	{
 		$source = new Source('test');
 
