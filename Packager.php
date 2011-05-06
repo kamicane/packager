@@ -22,6 +22,16 @@ class Packager {
 		return self::$instance;
 	}
 	
+	static function strip_blocks($code, $blocks)
+	{
+		foreach ((array) $blocks as $block){
+			$code = preg_replace_callback("%(/[/*])\s*<$block>(.*?)</$block>(?:\s*\*/)?%s", function($matches){
+				return (strpos($matches[2], ($matches[1] == "//") ? "\n" : "*/") === false) ? $matches[2] : "";
+			}, $code);
+		}
+		return $code;
+	}
+	
 	public function add_component(Source $source, $component)
 	{
 		$index = $this->get_source_index($source);
@@ -105,7 +115,7 @@ class Packager {
 			$require = $this->sources[$this->keys[$component]];
 			if (!in_array($require, $required)) $required[] = $require;
 		}
-		foreach ($source->get_requires() as $component) {
+		foreach ($source->get_requires() as $component){
 			$require = $this->sources[$this->keys[$component]];
 			if ($require->has_requires()) $this->get_required_for_source($require, &$required);
 		}

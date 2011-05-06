@@ -55,7 +55,26 @@ class PackagerTest extends PHPUnit_Framework_TestCase
 			file_get_contents(__DIR__ . '/fixtures/Source/Array.js'),
 			file_get_contents(__DIR__ . '/fixtures/Source/Class.js')
 		);
-		$this->assertEquals(implode('', $build), $packager->build($source));
+		
+		$actual = $packager->build($source);
+		$this->assertEquals(implode('', $build), $actual);
+		
+		return $actual;
+	}
+	
+	/**
+	 * @depends test_build
+	 */
+	public function test_strip_blocks($code)
+	{
+		$blocks = array('1.2compat');
+		
+		$code = Packager::strip_blocks($code, $blocks);
+
+		foreach ($blocks as $block){
+			$this->assertNotRegExp("/<$block>/", $code, "Should not find '$block' opening block.");
+			$this->assertNotRegExp("/<\/$block>/", $code, "Should not find '$block' closing block.");
+		}
 	}
 }
 
