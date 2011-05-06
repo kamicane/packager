@@ -102,8 +102,12 @@ class Packager {
 		
 		foreach ($source->get_requires() as $component){
 			if (!isset($this->keys[$component])) throw new Exception("Could not find '$component'.");
-			$required[] = $source = $this->sources[$this->keys[$component]];
-			if ($source->has_requires()) $this->get_required_for_source($source, &$required);
+			$require = $this->sources[$this->keys[$component]];
+			if (!in_array($require, $required)) $required[] = $require;
+		}
+		foreach ($source->get_requires() as $component) {
+			$require = $this->sources[$this->keys[$component]];
+			if ($require->has_requires()) $this->get_required_for_source($require, &$required);
 		}
 		
 		if ($return) return $required;

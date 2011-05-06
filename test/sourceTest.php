@@ -48,4 +48,31 @@ class SourceTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertEquals($core_code.$array_code, $source->build());
 	}
+	
+	public function test_redundant_deps()
+	{
+		$source = new Source('Base');
+		$base_code = '/* Base */';
+		$source->provides('Base');
+		$source->set_code($base_code);
+		
+		$source = new Source('Child');
+		$source->provides('Child');
+		$source->requires('Base');
+		$child_code = '/* Child */';
+		$source->set_code($child_code);
+		
+		$source = new Source('Sibling');
+		$source->provides('Sibling');
+		$source->requires('Base');
+		$sibling_code = '/* Sibling */';
+		$source->set_code($sibling_code);
+		
+		$source = new Source('Container');
+		$source->requires(array('Child', 'Sibling'));
+		$container_code = '/* Container */';
+		$source->set_code($container_code);
+		
+		$this->assertEquals($base_code.$sibling_code.$child_code.$container_code, $source->build());
+	}
 }
