@@ -75,13 +75,16 @@ class Source
 		if (!$this->code) throw new RuntimeException('Missing the code to parse. Did you forget to supply the source_path or set_code?');
 		
 		preg_match(self::DESCRIPTOR_REGEX, $this->code, $matches);
-		if (empty($matches)) throw new Exception("No yaml header present in $source_path");
-		
-		$header = YAML::decode($matches[0]);
-		
-		foreach($header as $key => $value){
-			$method = 'parse_' . strtolower($key);
-			if (is_callable(array($this, $method))) $this->$method($value);
+
+		if (!empty($matches){		
+			$header = YAML::decode($matches[0]);
+
+			foreach ($header as $key => $value){
+				$method = 'parse_' . strtolower($key);
+				if (is_callable(array($this, $method))) $this->$method($value);
+			}
+		} else {
+			$this->warn("No yaml header present in $source_path");
 		}
 	}
 	
@@ -129,5 +132,10 @@ class Source
 	{
 		$this->code = $code;
 		return $this;
+	}
+	
+	public function warn($message)
+	{
+		# todo(ibolmo): log mixin
 	}
 }
