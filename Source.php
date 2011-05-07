@@ -7,6 +7,8 @@ class Source
 	const DESCRIPTOR_REGEX = '/\/\*\s*^---(.*?)^(?:\.\.\.|---)\s*\*\//ms';
 	
 	protected $code = '';
+	protected $name = '';
+	protected $path = '';
 	protected $provides = array();
 	protected $requires = array(); 
 	

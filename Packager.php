@@ -1,5 +1,7 @@
 <?php
 
+# todo(ibolmo): packages with the same name cause an endless loop
+
 require_once __DIR__ . '/Package.php';
 
 class Packager {
@@ -63,11 +65,11 @@ class Packager {
 	}
 	
  	public function build(Source $source)
-	{
-		$build = array($source->get_code());
-		
-		foreach ($this->get_required_for_source($source) as $required) array_unshift($build, $required->get_code());
-		
+	{	
+		$build = array_map(function($source){
+			return $source->get_code();	
+		}, $this->get_required_for_source($source));
+		$build[] = $source->get_code();
 		return implode('', $build);
 	}
 	
@@ -103,21 +105,23 @@ class Packager {
 	}
 	
 	public function get_required_for_source(Source $source, &$required = null)
-	{
+	{	
 		$return = false;
 		if (!$required){
 			$return = true;
 			$required = array();
 		}
 		
-		foreach ($source->get_requires() as $component){
-			if (!isset($this->keys[$component])) throw new Exception("Could not find '$component'.");
-			$require = $this->sources[$this->keys[$component]];
-			if (!in_array($require, $required)) $required[] = $require;
-		}
-		foreach ($source->get_requires() as $component){
-			$require = $this->sources[$this->keys[$component]];
+		foreach ($source->get_requires() as $require){
+			if (!($require instanceof Source)) $require = $this->sources[$this->keys[$require]];
 			if ($require->has_requires()) $this->get_required_for_source($require, $required);
+		}
+		foreach ($source->get_requires() as $require){
+			if (!($require instanceof Source)){
+				if (!isset($this->keys[$require])) throw new Exception("Could not find '$require'.");
+				$require = $this->sources[$this->keys[$require]];
+			}
+			if (!in_array($require, $required)) $required[] = $require;
 		}
 		
 		if ($return) return $required;

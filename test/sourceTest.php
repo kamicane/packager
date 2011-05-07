@@ -73,6 +73,6 @@ class SourceTest extends PHPUnit_Framework_TestCase
 		$container_code = '/* Container */';
 		$source->set_code($container_code);
 		
-		$this->assertEquals($base_code.$sibling_code.$child_code.$container_code, $source->build());
+		$this->assertEquals($base_code.$child_code.$sibling_code.$container_code, $source->build());
 	}
 }

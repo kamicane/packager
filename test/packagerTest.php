@@ -35,8 +35,8 @@ class PackagerTest extends PHPUnit_Framework_TestCase
 		$required = $packager->get_required_for_source($class);
 		
 		$this->assertEquals(2, count($required));
-		$this->assertEquals('Array', $required[0]->get_name());
-		$this->assertEquals('Core', $required[1]->get_name());
+		$this->assertEquals('Core', $required[0]->get_name());
+		$this->assertEquals('Array', $required[1]->get_name());
 	}
 	
 	public function test_get_source_by_name()
