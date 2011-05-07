@@ -76,7 +76,7 @@ class Source
 		
 		preg_match(self::DESCRIPTOR_REGEX, $this->code, $matches);
 
-		if (!empty($matches){		
+		if (!empty($matches)){		
 			$header = YAML::decode($matches[0]);
 
 			foreach ($header as $key => $value){

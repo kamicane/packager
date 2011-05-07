@@ -102,7 +102,7 @@ class Packager {
 		return $this->sources;
 	}
 	
-	public function get_required_for_source(Source $source, $required = null)
+	public function get_required_for_source(Source $source, &$required = null)
 	{
 		$return = false;
 		if (!$required){
@@ -117,7 +117,7 @@ class Packager {
 		}
 		foreach ($source->get_requires() as $component){
 			$require = $this->sources[$this->keys[$component]];
-			if ($require->has_requires()) $this->get_required_for_source($require, &$required);
+			if ($require->has_requires()) $this->get_required_for_source($require, $required);
 		}
 		
 		if ($return) return $required;
