@@ -52,6 +52,11 @@ class Package
 		return $this->name;
 	}
 	
+	public function get_path()
+	{
+		return $this->path;
+	}
+	
 	public function get_sources()
 	{
 		return $this->sources;

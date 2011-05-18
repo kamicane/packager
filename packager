@@ -3,6 +3,18 @@
 
 require __DIR__ . '/packager.php';
 
+function info($message){
+	$std_out = fopen('php://stdout', 'w');
+	fwrite($std_out, $message);
+	fclose($std_out);
+}
+
+function warn($message){
+	$std_err = fopen('php://stderr', 'w');
+	fwrite($std_err, $message);
+	fclose($std_err);
+}
+
 $executable = array_shift($argv);
 $command = array_shift($argv);
 $a0 = !empty($argv[0]) ? $argv[0] : null;
@@ -26,19 +38,19 @@ switch ($command){
 		$realpath = realpath($folder);
 		
 		if (!$realpath){
-			Packager::warn("file or directory $folder not found\n");
+			warn("file or directory $folder not found\n");
 			exit(1);
 		}
 		
-		$pkg = new Packager($realpath);
-		$name = $pkg->get_package_name();
-		$path = $pkg->get_package_manifest();
+		$pkg = new Package($realpath);
+		$name = $pkg->get_name();
+		$path = $pkg->get_path();
 		
 		$packages[$name] = $path;
 		
 		file_put_contents("$home/.packages.yml", YAML::encode($packages));
 
-		Packager::info("the package $name has been registered as $path\n");
+		info("the package $name has been registered as $path\n");
 
 	break;
 	
@@ -47,7 +59,7 @@ switch ($command){
 		$name = array_shift($argv);
 		
 		if (empty($packages[$name])){
-			Packager::warn("there is no package called $name\n");
+			warn("there is no package called $name\n");
 			break;
 		}
 
@@ -55,7 +67,7 @@ switch ($command){
 	
 		file_put_contents("$home/.packages.yml", YAML::encode($packages));
 	
-		Packager::info("the package $name has been unregistered\n");
+		info("the package $name has been unregistered\n");
 	
 	break;
 	
@@ -64,18 +76,18 @@ switch ($command){
 		$package_name = array_shift($argv);
 	
 		if (empty($package_name)){
-			foreach ($packages as $name => $path) Packager::info("$name: $path\n");
+			foreach ($packages as $name => $path) info("$name: $path\n");
 		} else {
 			if (!empty($packages[$package_name])){
 				$package_path = $packages[$package_name];
-				$pkg = new Packager($package_path);
-				$files = $pkg->get_all_files();
-				foreach ($files as $file){
-					$file_name = $pkg->get_file_name($file);
-					Packager::info("- $file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+				$pkg = new Package($package_path);
+				$sources = $pkg->get_sources();
+				foreach ($sources as $source) {
+					$name = $source->get_name();
+					info("- $name: [" . implode(", ", $source->get_provides()) . "]\n");
 				}
 			} else {
-				Packager::warn("The package $package_name has not been found.\n");
+				warn("The package $package_name has not been found.\n");
 			}
 		}
 		
