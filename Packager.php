@@ -55,7 +55,7 @@ class Packager {
 	public function add_package($package)
 	{
 		if (!is_a($package, 'Package')) $package = new Package($package);
-		$this->packages[] = $package;
+		$this->packages[$package->get_name()] = $package;
 	}
 	
 	public function add_source(Source $source)
@@ -88,14 +88,23 @@ class Packager {
 		});
 	}
 	
-	public function get_source_by_name($name)
+	public function get_packages()
 	{
-		return isset($this->keys[$name]) ? $this->sources[$this->keys[$name]] : null;
+		return $this->packages;
 	}
 	
-	public function get_source_index($source)
+	public function get_source_by_name($name)
 	{
-		$key = $source->get_name();
+		$index = $this->get_source_index($name);
+		if ($index > -1) return $this->sources[$index];
+		
+		$this->warn("Could not find source '$name'.");
+		return null;
+	}
+	
+	public function get_source_index($key)
+	{
+		if ($key instanceof Source) $key = $key->get_name();
 		return isset($this->keys[$key]) ? $this->keys[$key] : -1;
 	}
 	
@@ -113,18 +122,42 @@ class Packager {
 		}
 		
 		foreach ($source->get_requires() as $require){
-			if (!($require instanceof Source)) $require = $this->sources[$this->keys[$require]];
+			if (!($require instanceof Source)) $require = $this->get_source_by_name($require);
+			if (!$require) continue;
 			if ($require->has_requires()) $this->get_required_for_source($require, $required);
 		}
 		foreach ($source->get_requires() as $require){
-			if (!($require instanceof Source)){
-				if (!isset($this->keys[$require])) throw new Exception("Could not find '$require'.");
-				$require = $this->sources[$this->keys[$require]];
-			}
+			if (!($require instanceof Source)) $require = $this->get_source_by_name($require);
+			if (!$require) continue;
 			if (!in_array($require, $required)) $required[] = $require;
 		}
 		
 		if ($return) return $required;
+	}
+	
+	public function remove_component(Source $source, $component)
+	{
+		foreach ($this->generators as $name => $callback){
+			$key = call_user_func($callback, $source, $component);
+			unset($this->keys[$key]);
+		}
+	}
+	
+	public function remove_package($package_name)
+	{
+		if ($package_name instanceof Package) $package_name = $package_name->get_name();
+		if (!isset($this->packages[$package_name])) return false;
+		foreach($this->packages[$package_name]->get_sources() as $source) $this->remove_source($source);
+		unset($this->packages[$package_name]);
+		return true;
+	}
+	
+	public function remove_source(Source $source)
+	{
+		$name = $source->get_name();
+		$index = $this->keys[$name];
+		foreach ($source->get_provides() as $component) $this->remove_component($source, $component);
+		unset($this->keys[$name], $this->sources[$index]);
 	}
 	
 	protected function set_key($key, $index, $generator_name)

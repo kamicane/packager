@@ -76,5 +76,38 @@ class PackagerTest extends PHPUnit_Framework_TestCase
 			$this->assertNotRegExp("/<\/$block>/", $code, "Should not find '$block' closing block.");
 		}
 	}
+	
+	public function test_remove_package()
+	{
+		$packager = Packager::get_instance();
+		
+		$package = new Package();
+		$package->set_name('Test Package');
+		
+		$packager->add_package($package);
+		
+		$packages = $packager->get_packages();
+		$this->assertEquals(2, count($packages));
+		$this->assertEquals(end($packages), $package);
+		
+		$this->assertTrue($packager->remove_package($package));
+		
+		$packages = $packager->get_packages();
+		$this->assertEquals(1, count($packages));
+		
+		$this->assertFalse($packager->remove_package('Random'));
+	}
+	
+	public function test_remove_package_and_components()
+	{
+		$packager = Packager::get_instance();
+		
+		$this->assertTrue($packager->remove_package('Core'));
+		
+		$sources = $packager->get_sources();
+		$this->assertEquals(0, count($sources));
+		
+		$this->assertFalse(!!$packager->get_source_by_name('Core'));
+	}
 }
 
