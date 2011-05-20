@@ -1,7 +1,8 @@
 #!/usr/bin/env php
 <?php
 
-require __DIR__ . '/packager.php';
+require_once __DIR__ . '/packager.php';
+require_once __DIR__ . '/helpers/array.php';
 
 function info($message){
 	$std_out = fopen('php://stdout', 'w');
@@ -148,10 +149,11 @@ switch ($command){
 			if (!$selected['use-only'] || array_contains($selected['use-only'], $name)) $paths[] = $path;
 		}
 		
-		$pkg = new Packager($paths);
+		$packager = Packager::get_instance();
+		foreach ($paths as $path) $packager->add_package($path);
 		
-		foreach ($selected['remove-packages'] as $package_name) $pkg->remove_package($package_name);
-		foreach ($selected['add-packages'] as $package_path) $pkg->add_package($package_path);
+		foreach ($selected['remove-packages'] as $package_name) $packager->remove_package($package_name);
+		foreach ($selected['add-packages'] as $package_path) $packager->add_package($package_path);
 		
 		$re = "/^([^\/]+)\/\*$/";
 		$wildcards = array();
@@ -176,20 +178,20 @@ switch ($command){
 			}
 		}
 		
-		$pkg->validate($files, $components, $wildcards);
+		$source = new Source('packager-cli');
+		$source->requires(array_merge($files, $wildcards));
+		warn("Build using: " . implode(', ', $packager->get_packages()) . "\n");
+		warn("Included Files/Components:\n");
 		
-		$files = $pkg->resolve_files($files, $components, $wildcards);
-
-		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
-		Packager::warn("Included Files/Components:\n");
-		
-		foreach ($files as $file){
-			$file_name = $pkg->get_file_name($file);
-			$file_package = $pkg->get_file_package($file);
-			Packager::warn("- $file_package/$file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+		$required = $packager->get_required_for_source($source);
+		foreach ($required as $required_source){
+			$file_name = $required_source->get_name();
+			$file_package = $required_source->get_package_name();
+			
+			warn("- $file_package/$file_name: [" . implode(", ", $required_source->get_provides()) . "]\n");
 		}
 		
-		echo $pkg->build($files, array(), array(), $blocks);
+		echo Packager::strip_blocks($source->build(), $blocks);
 	
 	break;
 	

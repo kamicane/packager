@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/Packager.php';
+if (!class_exists('Packager')) require_once __DIR__ . '/Packager.php';
 
 class Source
 {
