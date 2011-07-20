@@ -65,7 +65,7 @@ class Packager {
 			$patternUsed = true;
  		}
 
-		if ( !empty($manifest['sources']) ) $this->overall = $manifest['sources'];
+		if ( !empty($manifest['overall']) ) $this->overall = $manifest['overall'];
 
 		foreach ($manifest['sources'] as $i => $path){
 
