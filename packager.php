@@ -11,9 +11,10 @@ class Packager {
 		fclose($std_err);
 	}
 
-	private $packages = array();
+	private $packages  = array();
 	private $manifests = array();
-	private $root = null;
+	private $root      = null;
+	private $overall   = null;
 	
 	public function __construct($package_paths){
 		foreach ((array)$package_paths as $package_path) $this->parse_manifest($package_path);
@@ -58,13 +59,21 @@ class Packager {
 		$manifest['manifest'] = $manifest_path;
 		
 		$this->manifests[$package_name] = $manifest;
-
+		
 		if(!is_array($manifest['sources'])){
 			$manifest['sources'] = $this->bfglob($package_path, $manifest['sources'], 0, 5);
 			$patternUsed = true;
  		}
+
+		if ( !empty($manifest['sources']) ) $this->overall = $manifest['sources'];
+
 		foreach ($manifest['sources'] as $i => $path){
-		
+
+			if ($this->overall == $path) {
+				unset($manifest['sources'][$i]);
+				continue;
+			}
+
 			if(!isset($patternUsed)) $path = $package_path . $path;
 			
 			// this is where we "hook" for possible other replacers.
@@ -99,7 +108,6 @@ class Packager {
 			));
 
 		}
-
 	}
 	
 	public function add_package($package_path){
@@ -181,6 +189,12 @@ class Packager {
 	public function package_exists($name){
 		return array_contains($this->get_packages(), $name);
 	}
+
+	public function wrap_all ($code) {
+		if (!$this->overall) return $code;
+		
+		return str_replace('/*** [Code] ***/', $code, file_get_contents( $this->overall ));
+	}
 	
 	public function validate($more_files = array(), $more_components = array(), $more_packages = array()){
 
@@ -235,7 +249,7 @@ class Packager {
 			$source = preg_replace_callback("%(/[/*])\s*<$block>(.*?)</$block>(?:\s*\*/)?%s", array($this, "block_replacement"), $source);
 		}
 		
-		return $source . "\n";
+		return $this->wrap_all($source);
 	}
 	
 	private function block_replacement($matches){
