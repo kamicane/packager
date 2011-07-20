@@ -65,7 +65,7 @@ class Packager {
 			$patternUsed = true;
  		}
 
-		if ( !empty($manifest['overall']) ) $this->overall = $manifest['overall'];
+		if ( !empty($manifest['overall']) ) $this->overall = $package_path . $manifest['overall'];
 
 		foreach ($manifest['sources'] as $i => $path){
 
