@@ -11,10 +11,10 @@ class Packager {
 		fclose($std_err);
 	}
 
-	private $wrappers  = array();
 	private $packages  = array();
 	private $manifests = array();
 	private $root      = null;
+	private $overall   = null;
 	
 	public function __construct($package_paths){
 		foreach ((array)$package_paths as $package_path) $this->parse_manifest($package_path);
@@ -65,17 +65,11 @@ class Packager {
 			$patternUsed = true;
  		}
 
-		$wrappers = array( 'intro', 'outro' );
+		if ( !empty($manifest['sources']) ) $this->overall = $manifest['sources'];
 
-		foreach ($wrappers as $key => $type) {
-			$value = empty($manifest[$type]) ?
-				null : $package_path . $manifest[$type];
-			$this->wrappers[$type] = $wrappers[$key] = $value;
-		}
-		
 		foreach ($manifest['sources'] as $i => $path){
 
-			if (array_contains( $wrappers, $path )) {
+			if ($this->overall == $path) {
 				unset($manifest['sources'][$i]);
 				continue;
 			}
@@ -196,8 +190,10 @@ class Packager {
 		return array_contains($this->get_packages(), $name);
 	}
 
-	public function get_wrapper_source ($outro) {
-		return file_get_contents( $this->wrappers[$outro ? 'outro' : 'intro'] );
+	public function wrap_all ($code) {
+		if (!$this->overall) return $code;
+		
+		return str_replace('/*** [Code] ***/', $code, file_get_contents( $this->overall ));
 	}
 	
 	public function validate($more_files = array(), $more_components = array(), $more_packages = array()){
@@ -253,7 +249,7 @@ class Packager {
 			$source = preg_replace_callback("%(/[/*])\s*<$block>(.*?)</$block>(?:\s*\*/)?%s", array($this, "block_replacement"), $source);
 		}
 		
-		return $this->get_wrapper_source(false) . $source . $this->get_wrapper_source(true) . "\n";
+		return $this->wrap_all($source);
 	}
 	
 	private function block_replacement($matches){
