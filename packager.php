@@ -11,9 +11,10 @@ class Packager {
 		fclose($std_err);
 	}
 
-	private $packages = array();
+	private $wrappers  = array();
+	private $packages  = array();
 	private $manifests = array();
-	private $root = null;
+	private $root      = null;
 	
 	public function __construct($package_paths){
 		foreach ((array)$package_paths as $package_path) $this->parse_manifest($package_path);
@@ -58,13 +59,27 @@ class Packager {
 		$manifest['manifest'] = $manifest_path;
 		
 		$this->manifests[$package_name] = $manifest;
-
+		
 		if(!is_array($manifest['sources'])){
 			$manifest['sources'] = $this->bfglob($package_path, $manifest['sources'], 0, 5);
 			$patternUsed = true;
  		}
-		foreach ($manifest['sources'] as $i => $path){
+
+		$wrappers = array( 'intro', 'outro' );
+
+		foreach ($wrappers as $key => $type) {
+			$value = empty($manifest[$type]) ?
+				null : $package_path . $manifest[$type];
+			$this->wrappers[$type] = $wrappers[$key] = $value;
+		}
 		
+		foreach ($manifest['sources'] as $i => $path){
+
+			if (array_contains( $wrappers, $path )) {
+				unset($manifest['sources'][$i]);
+				continue;
+			}
+
 			if(!isset($patternUsed)) $path = $package_path . $path;
 			
 			// this is where we "hook" for possible other replacers.
@@ -99,7 +114,6 @@ class Packager {
 			));
 
 		}
-
 	}
 	
 	public function add_package($package_path){
@@ -181,6 +195,10 @@ class Packager {
 	public function package_exists($name){
 		return array_contains($this->get_packages(), $name);
 	}
+
+	public function get_wrapper_source ($outro) {
+		return file_get_contents( $this->wrappers[$outro ? 'outro' : 'intro'] );
+	}
 	
 	public function validate($more_files = array(), $more_components = array(), $more_packages = array()){
 
@@ -235,7 +253,7 @@ class Packager {
 			$source = preg_replace_callback("%(/[/*])\s*<$block>(.*?)</$block>(?:\s*\*/)?%s", array($this, "block_replacement"), $source);
 		}
 		
-		return $source . "\n";
+		return $this->get_wrapper_source(false) . $source . $this->get_wrapper_source(true) . "\n";
 	}
 	
 	private function block_replacement($matches){
