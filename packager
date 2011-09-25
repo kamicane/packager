@@ -1,7 +1,20 @@
 #!/usr/bin/env php
 <?php
 
-require dirname(__FILE__) . '/packager.php';
+require_once __DIR__ . '/packager.php';
+require_once __DIR__ . '/helpers/array.php';
+
+function info($message){
+	$std_out = fopen('php://stdout', 'w');
+	fwrite($std_out, $message);
+	fclose($std_out);
+}
+
+function warn($message){
+	$std_err = fopen('php://stderr', 'w');
+	fwrite($std_err, $message);
+	fclose($std_err);
+}
 
 $executable = array_shift($argv);
 $command = array_shift($argv);
@@ -26,19 +39,19 @@ switch ($command){
 		$realpath = realpath($folder);
 		
 		if (!$realpath){
-			Packager::warn("file or directory $folder not found\n");
+			warn("file or directory $folder not found\n");
 			exit(1);
 		}
 		
-		$pkg = new Packager($realpath);
-		$name = $pkg->get_package_name();
-		$path = $pkg->get_package_manifest();
+		$pkg = new Package($realpath);
+		$name = $pkg->get_name();
+		$path = $pkg->get_path();
 		
 		$packages[$name] = $path;
 		
 		file_put_contents("$home/.packages.yml", YAML::encode($packages));
 
-		Packager::info("the package $name has been registered as $path\n");
+		info("the package $name has been registered as $path\n");
 
 	break;
 	
@@ -47,7 +60,7 @@ switch ($command){
 		$name = array_shift($argv);
 		
 		if (empty($packages[$name])){
-			Packager::warn("there is no package called $name\n");
+			warn("there is no package called $name\n");
 			break;
 		}
 
@@ -55,7 +68,7 @@ switch ($command){
 	
 		file_put_contents("$home/.packages.yml", YAML::encode($packages));
 	
-		Packager::info("the package $name has been unregistered\n");
+		info("the package $name has been unregistered\n");
 	
 	break;
 	
@@ -64,18 +77,18 @@ switch ($command){
 		$package_name = array_shift($argv);
 	
 		if (empty($package_name)){
-			foreach ($packages as $name => $path) Packager::info("$name: $path\n");
+			foreach ($packages as $name => $path) info("$name: $path\n");
 		} else {
 			if (!empty($packages[$package_name])){
 				$package_path = $packages[$package_name];
-				$pkg = new Packager($package_path);
-				$files = $pkg->get_all_files();
-				foreach ($files as $file){
-					$file_name = $pkg->get_file_name($file);
-					Packager::info("- $file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+				$pkg = new Package($package_path);
+				$sources = $pkg->get_sources();
+				foreach ($sources as $source) {
+					$name = $source->get_name();
+					info("- $name: [" . implode(", ", $source->get_provides()) . "]\n");
 				}
 			} else {
-				Packager::warn("The package $package_name has not been found.\n");
+				warn("The package $package_name has not been found.\n");
 			}
 		}
 		
@@ -136,10 +149,11 @@ switch ($command){
 			if (!$selected['use-only'] || array_contains($selected['use-only'], $name)) $paths[] = $path;
 		}
 		
-		$pkg = new Packager($paths);
+		$packager = Packager::get_instance();
+		foreach ($paths as $path) $packager->add_package($path);
 		
-		foreach ($selected['remove-packages'] as $package_name) $pkg->remove_package($package_name);
-		foreach ($selected['add-packages'] as $package_path) $pkg->add_package($package_path);
+		foreach ($selected['remove-packages'] as $package_name) $packager->remove_package($package_name);
+		foreach ($selected['add-packages'] as $package_path) $packager->add_package($package_path);
 		
 		$re = "/^([^\/]+)\/\*$/";
 		$wildcards = array();
@@ -164,20 +178,20 @@ switch ($command){
 			}
 		}
 		
-		$pkg->validate($files, $components, $wildcards);
+		$source = new Source('packager-cli');
+		$source->requires(array_merge($files, $wildcards));
+		warn("Build using: " . implode(', ', $packager->get_packages()) . "\n");
+		warn("Included Files/Components:\n");
 		
-		$files = $pkg->resolve_files($files, $components, $wildcards);
-
-		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
-		Packager::warn("Included Files/Components:\n");
-		
-		foreach ($files as $file){
-			$file_name = $pkg->get_file_name($file);
-			$file_package = $pkg->get_file_package($file);
-			Packager::warn("- $file_package/$file_name: [" . implode(", ", $pkg->get_file_provides($file)) . "]\n");
+		$required = $packager->get_required_for_source($source);
+		foreach ($required as $required_source){
+			$file_name = $required_source->get_name();
+			$file_package = $required_source->get_package_name();
+			
+			warn("- $file_package/$file_name: [" . implode(", ", $required_source->get_provides()) . "]\n");
 		}
 		
-		echo $pkg->build($files, array(), array(), $blocks);
+		echo Packager::strip_blocks($source->build(), $blocks);
 	
 	break;
 	
@@ -194,7 +208,7 @@ switch ($command){
 }
 
 function usage($command = ''){
-	$dir = dirname(__FILE__);
+	$dir = __DIR__;
 	if (empty($command) || !file_exists("$dir/help/$command.txt")) $command = 'default';
 	echo file_get_contents("$dir/help/$command.txt");
 }
