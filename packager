@@ -87,6 +87,7 @@ switch ($command){
 			'files' => array(),
 			'add-packages' => array(),
 			'remove-packages' => array(),
+			'remove-components' => array(),
 			'blocks' => array(),
 			'use-only' => null
 		);
@@ -120,7 +121,11 @@ switch ($command){
 				$build = 'components';
 				continue;
 			}
-			
+			if ($arg == '-components'){
+				$build = 'remove-components';
+				continue;
+			}
+
 			if ($arg == '+files'){
 				$build = 'files';
 				continue;
@@ -176,7 +181,12 @@ switch ($command){
 		}
 		
 		$files = $pkg->complete_files($files);
-		
+
+		foreach ($selected['remove-components'] as $component){
+			$file = $pkg->component_to_file($component);
+			array_erase($files, $file);
+		}
+
 		Packager::warn("Build using: " . implode(', ', $pkg->get_packages()) . "\n");
 		
 		Packager::warn("Included Files/Components:\n");
