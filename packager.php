@@ -41,6 +41,8 @@ Class Packager {
 			$package_path = $pathinfo['dirname'] . '/';
 			$manifest_path = $package_path . $pathinfo['basename'];
 			$manifest_format = $pathinfo['extension'];
+		} else {
+			throw new Exception('Neither directory nor file "' . $path . '" exist.');
 		}
 		
 		if ($manifest_format == 'json') $manifest = json_decode(file_get_contents($manifest_path), true);
