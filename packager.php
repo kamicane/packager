@@ -39,6 +39,8 @@ Class Packager {
 			} else if (file_exists($package_path . 'package.json')){
 				$manifest_path = $package_path . 'package.json';
 				$manifest_format = 'json';
+			} else {
+				self::warn('No package information file could be found in "' . $package_path . '".');
 			}
 
 		} else if (file_exists($path)){
