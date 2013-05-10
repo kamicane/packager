@@ -126,6 +126,10 @@ Which is the same as...
 	
 Which builds the passed in components (and their dependancies) using your registered packages.
 	
+	./packager build +components Core/Type Core/Fx ART/ART.Element -components Core/Core
+	
+This will build a library that has the same dependencies as the previous example but exclude the `Core/Core` component.
+	
 	./packager build +files Core/Core Core/Fx ART/ART
 	
 This builds the passed in files (and their dependancies) using your registered packages.
