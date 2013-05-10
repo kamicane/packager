@@ -1,0 +1,16 @@
+{
+    "name": "kamicane/packager",
+    "description": "builds packages using the package.yml MooTools syntax ",
+    "type": "library",
+    "licence": "MIT",
+    "keywords": [],
+    "homepage": "https://github.com/kamicane/packager",
+    "authors" : [{
+        "name": "kamicane",
+        "email": "kamicane@gmail.com"
+    }],
+    "require": {
+        "php": ">=5.3.3",
+        "mustangostang/spyc": "0.5.*@dev"
+    }
+}
