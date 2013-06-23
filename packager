@@ -12,7 +12,7 @@ if ($a0 == '-h' || $a0 == '--help'){
 	exit;
 }
 
-$home = exec('echo $HOME');
+$home = exec('echo '.(strstr(PHP_OS, 'WIN') ? '%UserProfile%': '$HOME'));
 
 $packages = YAML::decode_file("$home/.packages.yml");
 if (empty($packages)) $packages = array();
