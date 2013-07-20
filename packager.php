@@ -1,7 +1,7 @@
 <?php
 
 require dirname(__FILE__) . "/helpers/yaml.php";
-require dirname(__FILE__) . "/helpers/array.php";
+if (!function_exists('array_get')) require dirname(__FILE__) . "/helpers/array.php";
 
 Class Packager {
 	
