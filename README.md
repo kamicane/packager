@@ -1,7 +1,7 @@
 Packager
 ========
 
-Packager is a PHP 5.2+ library to concatenate libraries split in multiple files in a single file. It automatically calculates dependancies. Packager requires a yml header syntax in every file, and a `package.yml` manifest file, as seen on the MooTools project.
+Packager is a PHP 5.2+ library to concatenate libraries split in multiple files in a single file. It automatically calculates dependencies. Packager requires a yml header syntax in every file, and a `package.yml` manifest file, as seen on the MooTools project.
 
 Packager API
 ============
