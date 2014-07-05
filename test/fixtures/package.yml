@@ -1,0 +1,11 @@
+name: "Core"
+
+license: "[MIT License](http://mootools.net/license.txt)"
+
+authors: "[MooTools Development Team](http://mootools.net/developers)"
+
+sources:
+  - "Source/Core.js"
+  - "Source/Array.js"
+  - "Source/Browser.js"
+  - "Source/Class.js"
