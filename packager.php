@@ -3,7 +3,7 @@
 require dirname(__FILE__) . "/helpers/yaml.php";
 require dirname(__FILE__) . "/helpers/array.php";
 
-Class Packager {
+class Packager {
 	
 	public static function warn($message){
 		$std_err = fopen('php://stderr', 'w');
@@ -11,9 +11,10 @@ Class Packager {
 		fclose($std_err);
 	}
 
-	private $packages = array();
+	private $packages  = array();
 	private $manifests = array();
-	private $root = null;
+	private $root      = null;
+	private $overall   = null;
 	
 	public function __construct($package_paths){
 		foreach ((array)$package_paths as $package_path) $this->parse_manifest($package_path);
@@ -59,9 +60,21 @@ Class Packager {
 		
 		$this->manifests[$package_name] = $manifest;
 		
+		if(!is_array($manifest['sources'])){
+			$manifest['sources'] = $this->bfglob($package_path, $manifest['sources'], 0, 5);
+			$patternUsed = true;
+ 		}
+
+		if ( !empty($manifest['overall']) ) $this->overall = $package_path . $manifest['overall'];
+
 		foreach ($manifest['sources'] as $i => $path){
-			
-			$path = $package_path . $path;
+
+			if ($this->overall == $path) {
+				unset($manifest['sources'][$i]);
+				continue;
+			}
+
+			if(!isset($patternUsed)) $path = $package_path . $path;
 			
 			// this is where we "hook" for possible other replacers.
 			$source = file_get_contents($path);
@@ -115,6 +128,21 @@ Class Packager {
 		if (empty($exploded[0])) return array($default, $exploded[1]);
 		return array($exploded[0], $exploded[1]);
 	}
+
+	private	function bfglob($path, $pattern = '*', $flags = 0, $depth = 0) {
+		$matches = array();
+		$folders = array(rtrim($path, DIRECTORY_SEPARATOR));
+	     
+		while($folder = array_shift($folders)) {
+		$matches = array_merge($matches, glob($folder.DIRECTORY_SEPARATOR.$pattern, $flags));
+			if($depth != 0) {
+				$moreFolders = glob($folder.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR);
+				$depth   = ($depth < -1) ? -1: $depth + count($moreFolders) - 2;
+				$folders = array_merge($folders, $moreFolders);
+			}
+		}
+		return $matches;
+	}
 	
 	// # private HASHES
 	
@@ -160,6 +188,12 @@ Class Packager {
 	
 	public function package_exists($name){
 		return array_contains($this->get_packages(), $name);
+	}
+
+	public function wrap_all ($code) {
+		if (!$this->overall) return $code;
+		
+		return str_replace('/*** [Code] ***/', $code, file_get_contents( $this->overall ));
 	}
 	
 	public function validate($more_files = array(), $more_components = array(), $more_packages = array()){
@@ -215,7 +249,7 @@ Class Packager {
 			$source = preg_replace_callback("%(/[/*])\s*<$block>(.*?)</$block>(?:\s*\*/)?%s", array($this, "block_replacement"), $source);
 		}
 		
-		return $source . "\n";
+		return $this->wrap_all($source);
 	}
 	
 	private function block_replacement($matches){
